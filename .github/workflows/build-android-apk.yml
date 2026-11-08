@@ -23,6 +23,7 @@ jobs:
         run: |
           mkdir -p android/app/src/main/res/mipmap-mdpi android/app/src/main/res/mipmap-hdpi android/app/src/main/res/mipmap-xhdpi android/app/src/main/res/mipmap-xxhdpi android/app/src/main/res/mipmap-xxxhdpi
           curl -fL 'https://raw.githubusercontent.com/SIOMSIOM2014/IPTV-/main/icon-512.png' -o /tmp/icon.png
+          python3 -m pip install --quiet pillow
           python3 - <<'PY'
           from PIL import Image
           src=Image.open('/tmp/icon.png').convert('RGBA')
