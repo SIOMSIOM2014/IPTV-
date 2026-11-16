@@ -1,109 +1,115 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#000000">
-<title>IPTV WORLD</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080e19"><title>IPTV WORLD</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;padding:16px;background:#000;color:#fff;font-family:Arial,Tahoma,sans-serif;text-align:center}
-h2{font-size:20px;margin:8px 0 16px}video{width:100%;max-width:900px;aspect-ratio:16/9;background:#111;display:block;margin:12px auto;border-radius:12px}
-#status{color:#bbb;font-size:14px;min-height:24px;margin:10px}.tools{max-width:900px;margin:10px auto;display:flex;gap:8px}
-input{flex:1;min-width:0;background:#171717;border:1px solid #444;border-radius:8px;padding:12px;color:white}
-button{padding:10px 13px;background:#333;border:1px solid #555;color:white;border-radius:8px;font-size:14px}
-.channel-list{max-width:1100px;margin:14px auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
-.channel-button{width:100%;min-height:46px;overflow-wrap:anywhere}.channel-button:active{background:#155eef}
-.note{color:#aaa;font-size:12px;max-width:900px;margin:12px auto;line-height:1.6}
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#172a43,#080e19 65%);color:#f5f7fb;font-family:Arial,Tahoma,sans-serif}
+header{position:sticky;top:0;z-index:5;background:#0b1422ed;backdrop-filter:blur(12px);padding:14px 16px;border-bottom:1px solid #293b54;display:flex;justify-content:space-between;align-items:center}
+.brand{font-size:21px;font-weight:900}.brand b{color:#ff6963}main{max-width:1100px;margin:auto;padding:14px}
+.intro{background:linear-gradient(120deg,#2a1d2b,#142d45);border:1px solid #394b63;border-radius:17px;padding:16px;margin:12px 0}.intro h1{font-size:20px;margin:0 0 7px}.intro p{font-size:13px;color:#c0cede;line-height:1.6;margin:0}
+.toolbar{display:flex;gap:8px;margin:14px 0}.toolbar input{flex:1;min-width:0}
+input{background:#111c2d;color:white;border:1px solid #34465f;border-radius:11px;padding:12px;font-size:15px}
+button{border:1px solid #3b4c65;border-radius:11px;background:#1b2b42;color:white;padding:10px 13px;font-weight:700;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid #ff7770;outline-offset:2px}
+.channels-head{display:flex;align-items:center;justify-content:space-between;margin:16px 2px 10px}.channels-head h2{font-size:18px;margin:0}.muted{color:#a9b8ca;font-size:12px}
+.channel-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:9px}
+.channel{display:flex;align-items:center;gap:10px;text-align:right;background:#111c2d;border:1px solid #293b54;border-radius:13px;padding:10px;min-width:0;transition:.15s}
+.channel:active,.channel.selected{border-color:#f06b65;background:#2b202b}.logo{width:44px;height:44px;flex:0 0 44px;border-radius:9px;object-fit:contain;background:#24344a;padding:3px}
+.channel-info{min-width:0;flex:1}.channel-name{font-size:14px;font-weight:800;overflow-wrap:anywhere}.channel-meta{font-size:11px;color:#a9b8ca;margin-top:4px;overflow-wrap:anywhere}
+.play-icon{font-size:18px;color:#ff7770}
+.player-section{margin:22px 0 12px;scroll-margin-top:82px}.player-head{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#17263a;border:1px solid #34465f;border-bottom:0;border-radius:15px 15px 0 0;padding:12px}
+#now{font-weight:800;overflow-wrap:anywhere}.live{font-size:11px;color:#ff7770;white-space:nowrap}
+.player-box{background:#000;border:1px solid #34465f;border-radius:0 0 15px 15px;overflow:hidden}
+video{display:block;width:100%;aspect-ratio:16/9;max-height:65vh;background:#000;object-fit:contain}
+#status{padding:10px 13px;background:#111c2d;color:#b8c6d8;font-size:13px;line-height:1.6;min-height:40px}
+.player-options{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;padding:10px;background:#0e1928}
+.switch{display:flex;gap:8px;align-items:center;font-size:13px;color:#d4deeb}.switch input{accent-color:#e53935;width:18px;height:18px}
+.note{font-size:12px;color:#9eafc4;line-height:1.7;margin:14px 2px 25px}
+.empty{padding:22px;text-align:center;color:#a9b8ca;background:#111c2d;border:1px dashed #34465f;border-radius:13px}
+@media(max-width:600px){main{padding:10px}.channel-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.channel{padding:8px;gap:7px}.logo{width:36px;height:36px;flex-basis:36px}.channel-name{font-size:12px}.channel-meta{font-size:10px}.toolbar button{padding:9px}.intro{padding:13px}}
 </style>
 </head>
 <body>
-<h2>📺 IPTV WORLD — تشغيل القنوات والترجمة المتاحة تلقائياً</h2>
-<video id="video" controls playsinline crossorigin="anonymous"></video>
-<div id="status" role="status">⏳ جارٍ تحميل قائمة القنوات...</div>
-<div class="tools"><input id="search" type="search" placeholder="ابحث عن قناة..."><button id="reload">تحديث القنوات</button></div>
-<div id="channel-list" class="channel-list"><p>📡 جاري تحميل القنوات...</p></div>
-<p class="note">تُعرض الترجمات التي يوفرها مصدر القناة فقط. يفضّل التطبيق العربية ثم الإنجليزية ثم الفرنسية عند توفرها. قد لا تعمل بعض القنوات بسبب قيود المصدر أو التوافق أو حقوق البث.</p>
+<header><div class="brand">📺 <b>IPTV</b> WORLD</div><span class="muted">مشغل القنوات</span></header>
+<main>
+<section class="intro"><h1>شاهد قنواتك بسهولة 🌍</h1><p>اختر القناة من القائمة وسيظهر المشغل أسفل القنوات وينتقل إليها تلقائياً. أسماء القنوات تُعرض كما يقدّمها ملف M3U الأصلي.</p></section>
+<div class="toolbar"><input id="search" type="search" placeholder="ابحث عن اسم القناة..." aria-label="بحث عن قناة"><button id="reload">تحديث</button></div>
+<div class="channels-head"><h2>القنوات المتاحة</h2><span class="muted" id="count">جارٍ التحميل...</span></div>
+<div id="channel-list" class="channel-list"><div class="empty">📡 جارٍ تحميل القنوات...</div></div>
+<section class="player-section" id="player-section">
+ <div class="player-head"><span id="now">اختر قناة من القائمة أعلاه</span><span class="live">● المشغل</span></div>
+ <div class="player-box"><video id="video" controls playsinline preload="none"></video><div id="status" role="status">سيظهر البث هنا بعد اختيار قناة.</div>
+ <div class="player-options"><label class="switch"><input id="saveData" type="checkbox"> وضع استهلاك أقل للبيانات</label><button id="toChannels">↑ العودة إلى القنوات</button></div></div>
+</section>
+<p class="note">جودة البث التلقائية تتكيف مع الشبكة عندما يوفّر المصدر عدة جودات. وضع استهلاك البيانات يفضّل أقل جودة متاحة ويقلل التخزين المؤقت، لكن كمية البيانات تعتمد على مصدر القناة. لا يمكن للتطبيق تجاوز شروط باقات شركات الاتصالات أو جعل البث المجاني مضموناً.</p>
+</main>
 <script>
 "use strict";
 const PLAYLIST="https://iptv-org.github.io/iptv/index.m3u";
-const video=document.getElementById("video"),list=document.getElementById("channel-list"),statusBox=document.getElementById("status"),search=document.getElementById("search");
-let channels=[],hls=null;
-const preferred=["ar","en","fr"];
-function languageCode(track){
-  const raw=(track.lang||track.language||track.attrs?.LANGUAGE||track.attrs?.language||"").toLowerCase();
-  if(raw.startsWith("ar"))return "ar";
-  if(raw.startsWith("en"))return "en";
-  if(raw.startsWith("fr"))return "fr";
-  return "";
-}
-function selectSubtitle(tracks,select){
-  if(!tracks||!tracks.length){statusBox.textContent="تم تشغيل القناة؛ لا توجد ترجمة مرفقة من المصدر.";return;}
-  let chosen=-1;
-  for(const lang of preferred){chosen=tracks.findIndex(t=>languageCode(t)===lang);if(chosen>=0)break;}
-  if(chosen>=0){select(chosen);statusBox.textContent="تم اختيار الترجمة: "+({ar:"العربية",en:"الإنجليزية",fr:"الفرنسية"}[languageCode(tracks[chosen])]);}
-  else{select(-1);statusBox.textContent="القناة تعمل، لكن لا توجد ترجمة بالعربية أو الإنجليزية أو الفرنسية.";}
-}
-function stopCurrent(){
-  if(hls){hls.destroy();hls=null;}
-  video.pause();video.removeAttribute("src");video.load();
-}
-function playStream(url,name){
-  stopCurrent();document.getElementById("now-title")?.remove();
-  statusBox.textContent="⏳ جارٍ تشغيل "+name+"...";
-  if(window.Hls&&Hls.isSupported()){
-    hls=new Hls({enableWorker:true,lowLatencyMode:false,capLevelToPlayerSize:true,startLevel:0,abrEwmaDefaultEstimate:350000,maxBufferLength:12,backBufferLength:20});
-    hls.loadSource(url);hls.attachMedia(video);
-    hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED,(_,data)=>{
-      const tracks=data.subtitleTracks||hls.subtitleTracks||[];
-      selectSubtitle(tracks,index=>{hls.subtitleTrack=index;hls.subtitleDisplay=index>=0;});
-    });
-    hls.on(Hls.Events.MANIFEST_PARSED,()=>{video.play().catch(()=>statusBox.textContent="اضغط زر التشغيل لبدء القناة.");});
-    hls.on(Hls.Events.ERROR,(_,data)=>{if(data.fatal)statusBox.textContent="تعذر تشغيل هذا البث. جرّب قناة أخرى أو تحقق من المصدر.";});
-  }else if(video.canPlayType("application/vnd.apple.mpegurl")){
-    video.src=url;
-    video.addEventListener("loadedmetadata",()=>{
-      const tracks=Array.from(video.textTracks||[]);
-      selectSubtitle(tracks,index=>{tracks.forEach((t,i)=>t.mode=i===index?"showing":"disabled");});
-      video.play().catch(()=>statusBox.textContent="اضغط زر التشغيل لبدء القناة.");
-    },{once:true});
-  }else statusBox.textContent="هذا المتصفح لا يدعم تشغيل HLS.";
-}
-async function loadM3U(url){
-  statusBox.textContent="⏳ جارٍ تحميل القنوات...";
-  list.innerHTML="";
-  try{
-    const res=await fetch(url,{cache:"no-store"});
-    if(!res.ok)throw new Error("HTTP "+res.status);
-    const text=await res.text(),lines=text.split(/\r?\n/),found=[];
-    let meta=null;
-    for(const raw of lines){
-      const line=raw.trim();if(!line)continue;
-      if(line.startsWith("#EXTINF")){meta=line;continue;}
-      if(meta&& !line.startsWith("#")){
-        const name=meta.includes(",")?meta.slice(meta.lastIndexOf(",")+1).trim():"قناة";
-        const logo=(meta.match(/tvg-logo="([^"]*)"/i)||[])[1]||"";
-        const group=(meta.match(/group-title="([^"]*)"/i)||[])[1]||"";
-        found.push({name:name||"قناة",url:line,logo,group});meta=null;
-        if(found.length>=2000)break;
-      }
-    }
-    channels=found;render();
-    statusBox.textContent=found.length?"تم تحميل "+found.length+" قناة. اختر قناة للبدء.":"لم يتم العثور على قنوات في القائمة.";
-  }catch(e){statusBox.textContent="تعذر تحميل القائمة. قد يمنع المصدر الطلب من المتصفح (CORS) أو تحقق من الاتصال.";}
+const $=id=>document.getElementById(id),video=$("video"),list=$("channel-list"),statusBox=$("status");
+let channels=[],hls=null,selected=null;
+function stopPlayer(){if(hls){hls.destroy();hls=null;}video.pause();video.removeAttribute("src");video.load();}
+function playStream(channel){
+ selected=channel;stopPlayer();$("now").textContent=channel.name;
+ document.querySelectorAll(".channel").forEach(el=>el.classList.toggle("selected",el.dataset.name===channel.name));
+ statusBox.textContent="⏳ جارٍ تشغيل "+channel.name+"...";
+ $("player-section").scrollIntoView({behavior:"smooth",block:"start"});
+ if(window.Hls&&Hls.isSupported()){
+  const saver=$("saveData").checked;
+  hls=new Hls({enableWorker:true,lowLatencyMode:false,capLevelToPlayerSize:true,startLevel:0,abrEwmaDefaultEstimate:saver?180000:350000,maxBufferLength:saver?6:12,backBufferLength:10});
+  hls.loadSource(channel.url);hls.attachMedia(video);
+  hls.on(Hls.Events.MANIFEST_PARSED,()=>{
+   if(saver&&hls.levels.length>1){hls.currentLevel=0;hls.nextLevel=0;}
+   statusBox.textContent=saver?"وضع استهلاك أقل للبيانات: تم اختيار أقل جودة متاحة إن وفرها المصدر.":"التشغيل التلقائي للجودة حسب سرعة اتصالك.";
+   video.play().catch(()=>statusBox.textContent="اضغط زر التشغيل لبدء القناة.");
+  });
+  hls.on(Hls.Events.LEVEL_SWITCHED,(_,data)=>{if(!saver)statusBox.textContent="جودة البث تتكيف تلقائياً مع اتصالك."});
+  hls.on(Hls.Events.ERROR,(_,data)=>{if(data.fatal)statusBox.textContent="تعذر تشغيل هذا البث؛ قد يكون المصدر غير متاح أو غير متوافق. جرّب قناة أخرى.";});
+ }else if(video.canPlayType("application/vnd.apple.mpegurl")){
+  video.src=channel.url;video.play().catch(()=>statusBox.textContent="اضغط زر التشغيل لبدء القناة.");
+ }else statusBox.textContent="هذا المتصفح لا يدعم صيغة البث المطلوبة.";
 }
 function render(){
-  const term=search.value.trim().toLowerCase();list.innerHTML="";
-  const filtered=channels.filter(c=>c.name.toLowerCase().includes(term)||c.group.toLowerCase().includes(term));
-  for(const channel of filtered){
-    const btn=document.createElement("button");btn.className="channel-button";btn.textContent=channel.name;
-    btn.title=channel.group;btn.addEventListener("click",()=>playStream(channel.url,channel.name));list.appendChild(btn);
-  }
-  if(!filtered.length)list.innerHTML="<p>لا توجد نتائج مطابقة.</p>";
+ const term=$("search").value.trim().toLocaleLowerCase();
+ const filtered=channels.filter(c=>(c.name+" "+c.group).toLocaleLowerCase().includes(term));
+ list.innerHTML="";
+ $("count").textContent=filtered.length+" / "+channels.length+" قناة";
+ if(!filtered.length){list.innerHTML='<div class="empty">لا توجد قنوات مطابقة للبحث.</div>';return;}
+ for(const c of filtered){
+  const btn=document.createElement("button");btn.type="button";btn.className="channel";btn.dataset.name=c.name;
+  const logo=document.createElement("img");logo.className="logo";logo.alt="";logo.loading="lazy";logo.src=c.logo||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%2324344a'/%3E%3Ctext x='32' y='42' font-size='32' text-anchor='middle'%3E📺%3C/text%3E%3C/svg%3E";
+  logo.onerror=()=>{logo.removeAttribute("src");logo.alt="📺";};
+  const info=document.createElement("span");info.className="channel-info";
+  const name=document.createElement("span");name.className="channel-name";name.textContent=c.name;
+  const meta=document.createElement("span");meta.className="channel-meta";meta.textContent=c.group||"IPTV";
+  info.append(name,meta);const icon=document.createElement("span");icon.className="play-icon";icon.textContent="▶";
+  btn.append(logo,info,icon);btn.addEventListener("click",()=>playStream(c));list.appendChild(btn);
+ }
 }
-search.addEventListener("input",render);
-document.getElementById("reload").addEventListener("click",()=>loadM3U(PLAYLIST));
-loadM3U(PLAYLIST);
+async function loadM3U(){
+ $("count").textContent="جارٍ التحميل...";
+ try{
+  const res=await fetch(PLAYLIST,{cache:"no-store"});if(!res.ok)throw new Error("HTTP "+res.status);
+  const lines=(await res.text()).split(/\r?\n/),found=[];let meta=null;
+  for(const raw of lines){const line=raw.trim();if(!line)continue;
+   if(line.startsWith("#EXTINF")){meta=line;continue;}
+   if(meta&&!line.startsWith("#")){
+    const comma=meta.lastIndexOf(","),name=comma>=0?meta.slice(comma+1).trim():"Unnamed channel";
+    const logo=(meta.match(/tvg-logo="([^"]*)"/i)||[])[1]||"";
+    const group=(meta.match(/group-title="([^"]*)"/i)||[])[1]||"";
+    found.push({name:name||"Unnamed channel",url:line,logo,group});meta=null;
+    if(found.length>=2000)break;
+   }
+  }
+  channels=found;render();
+ }catch(e){list.innerHTML='<div class="empty">تعذر تحميل قائمة القنوات. قد يكون المصدر غير متاح أو يمنع المتصفح الوصول إليه.</div>';$("count").textContent="تعذر التحميل";}
+}
+$("search").addEventListener("input",render);
+$("reload").addEventListener("click",loadM3U);
+$("toChannels").addEventListener("click",()=>{document.querySelector(".channels-head").scrollIntoView({behavior:"smooth",block:"start"});});
+$("saveData").addEventListener("change",()=>{if(selected)playStream(selected);});
+loadM3U();
 </script>
-</body>
-</html>
+</body></html>
