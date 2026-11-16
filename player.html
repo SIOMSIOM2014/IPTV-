@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>IPTV WORLD</title>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:16px;background:#000;color:#fff;font-family:Arial,Tahoma,sans-serif;text-align:center}
+h2{font-size:20px;margin:8px 0 16px}video{width:100%;max-width:900px;aspect-ratio:16/9;background:#111;display:block;margin:12px auto;border-radius:12px}
+#status{color:#bbb;font-size:14px;min-height:24px;margin:10px}.tools{max-width:900px;margin:10px auto;display:flex;gap:8px}
+input{flex:1;min-width:0;background:#171717;border:1px solid #444;border-radius:8px;padding:12px;color:white}
+button{padding:10px 13px;background:#333;border:1px solid #555;color:white;border-radius:8px;font-size:14px}
+.channel-list{max-width:1100px;margin:14px auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+.channel-button{width:100%;min-height:46px;overflow-wrap:anywhere}.channel-button:active{background:#155eef}
+.note{color:#aaa;font-size:12px;max-width:900px;margin:12px auto;line-height:1.6}
+</style>
+</head>
+<body>
+<h2>📺 IPTV WORLD — تشغيل القنوات والترجمة المتاحة تلقائياً</h2>
+<video id="video" controls playsinline crossorigin="anonymous"></video>
+<div id="status" role="status">⏳ جارٍ تحميل قائمة القنوات...</div>
+<div class="tools"><input id="search" type="search" placeholder="ابحث عن قناة..."><button id="reload">تحديث القنوات</button></div>
+<div id="channel-list" class="channel-list"><p>📡 جاري تحميل القنوات...</p></div>
+<p class="note">تُعرض الترجمات التي يوفرها مصدر القناة فقط. يفضّل التطبيق العربية ثم الإنجليزية ثم الفرنسية عند توفرها. قد لا تعمل بعض القنوات بسبب قيود المصدر أو التوافق أو حقوق البث.</p>
+<script>
+"use strict";
+const PLAYLIST="https://iptv-org.github.io/iptv/index.m3u";
+const video=document.getElementById("video"),list=document.getElementById("channel-list"),statusBox=document.getElementById("status"),search=document.getElementById("search");
+let channels=[],hls=null;
+const preferred=["ar","en","fr"];
+function languageCode(track){
+  const raw=(track.lang||track.language||track.attrs?.LANGUAGE||track.attrs?.language||"").toLowerCase();
+  if(raw.startsWith("ar"))return "ar";
+  if(raw.startsWith("en"))return "en";
+  if(raw.startsWith("fr"))return "fr";
+  return "";
+}
+function selectSubtitle(tracks,select){
+  if(!tracks||!tracks.length){statusBox.textContent="تم تشغيل القناة؛ لا توجد ترجمة مرفقة من المصدر.";return;}
+  let chosen=-1;
+  for(const lang of preferred){chosen=tracks.findIndex(t=>languageCode(t)===lang);if(chosen>=0)break;}
+  if(chosen>=0){select(chosen);statusBox.textContent="تم اختيار الترجمة: "+({ar:"العربية",en:"الإنجليزية",fr:"الفرنسية"}[languageCode(tracks[chosen])]);}
+  else{select(-1);statusBox.textContent="القناة تعمل، لكن لا توجد ترجمة بالعربية أو الإنجليزية أو الفرنسية.";}
+}
+function stopCurrent(){
+  if(hls){hls.destroy();hls=null;}
+  video.pause();video.removeAttribute("src");video.load();
+}
+function playStream(url,name){
+  stopCurrent();document.getElementById("now-title")?.remove();
+  statusBox.textContent="⏳ جارٍ تشغيل "+name+"...";
+  if(window.Hls&&Hls.isSupported()){
+    hls=new Hls({enableWorker:true,lowLatencyMode:false,capLevelToPlayerSize:true,startLevel:0,abrEwmaDefaultEstimate:350000,maxBufferLength:12,backBufferLength:20});
+    hls.loadSource(url);hls.attachMedia(video);
+    hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED,(_,data)=>{
+      const tracks=data.subtitleTracks||hls.subtitleTracks||[];
+      selectSubtitle(tracks,index=>{hls.subtitleTrack=index;hls.subtitleDisplay=index>=0;});
+    });
+    hls.on(Hls.Events.MANIFEST_PARSED,()=>{video.play().catch(()=>statusBox.textContent="اضغط زر التشغيل لبدء القناة.");});
+    hls.on(Hls.Events.ERROR,(_,data)=>{if(data.fatal)statusBox.textContent="تعذر تشغيل هذا البث. جرّب قناة أخرى أو تحقق من المصدر.";});
+  }else if(video.canPlayType("application/vnd.apple.mpegurl")){
+    video.src=url;
+    video.addEventListener("loadedmetadata",()=>{
+      const tracks=Array.from(video.textTracks||[]);
+      selectSubtitle(tracks,index=>{tracks.forEach((t,i)=>t.mode=i===index?"showing":"disabled");});
+      video.play().catch(()=>statusBox.textContent="اضغط زر التشغيل لبدء القناة.");
+    },{once:true});
+  }else statusBox.textContent="هذا المتصفح لا يدعم تشغيل HLS.";
+}
+async function loadM3U(url){
+  statusBox.textContent="⏳ جارٍ تحميل القنوات...";
+  list.innerHTML="";
+  try{
+    const res=await fetch(url,{cache:"no-store"});
+    if(!res.ok)throw new Error("HTTP "+res.status);
+    const text=await res.text(),lines=text.split(/\r?\n/),found=[];
+    let meta=null;
+    for(const raw of lines){
+      const line=raw.trim();if(!line)continue;
+      if(line.startsWith("#EXTINF")){meta=line;continue;}
+      if(meta&& !line.startsWith("#")){
+        const name=meta.includes(",")?meta.slice(meta.lastIndexOf(",")+1).trim():"قناة";
+        const logo=(meta.match(/tvg-logo="([^"]*)"/i)||[])[1]||"";
+        const group=(meta.match(/group-title="([^"]*)"/i)||[])[1]||"";
+        found.push({name:name||"قناة",url:line,logo,group});meta=null;
+        if(found.length>=2000)break;
+      }
+    }
+    channels=found;render();
+    statusBox.textContent=found.length?"تم تحميل "+found.length+" قناة. اختر قناة للبدء.":"لم يتم العثور على قنوات في القائمة.";
+  }catch(e){statusBox.textContent="تعذر تحميل القائمة. قد يمنع المصدر الطلب من المتصفح (CORS) أو تحقق من الاتصال.";}
+}
+function render(){
+  const term=search.value.trim().toLowerCase();list.innerHTML="";
+  const filtered=channels.filter(c=>c.name.toLowerCase().includes(term)||c.group.toLowerCase().includes(term));
+  for(const channel of filtered){
+    const btn=document.createElement("button");btn.className="channel-button";btn.textContent=channel.name;
+    btn.title=channel.group;btn.addEventListener("click",()=>playStream(channel.url,channel.name));list.appendChild(btn);
+  }
+  if(!filtered.length)list.innerHTML="<p>لا توجد نتائج مطابقة.</p>";
+}
+search.addEventListener("input",render);
+document.getElementById("reload").addEventListener("click",()=>loadM3U(PLAYLIST));
+loadM3U(PLAYLIST);
+</script>
+</body>
+</html>
