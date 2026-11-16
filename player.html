@@ -109,7 +109,7 @@ async function readCachedPlaylist(){
  try{const db=await openDB();const value=await new Promise((resolve,reject)=>{const req=db.transaction("playlists").objectStore("playlists").get("default");req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});db.close();return value||null;}catch(e){return null;}
 }
 function parseM3U(text){
- const lines=text.split(/\\r?\\n/),found=[];let meta=null;
+ const lines=text.split(/\r?\n/),found=[];let meta=null;
  for(const raw of lines){const line=raw.trim();if(!line)continue;
   if(line.startsWith("#EXTINF")){meta=line;continue;}
   if(meta&&!line.startsWith("#")){
