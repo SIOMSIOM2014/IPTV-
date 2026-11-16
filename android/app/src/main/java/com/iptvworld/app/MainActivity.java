@@ -34,6 +34,8 @@ public class MainActivity extends Activity {
     buildUi();
     player=new ExoPlayer.Builder(this).build();
     playerView.setPlayer(player);
+    playlistInput.setText("https://iptv-org.github.io/iptv/index.m3u");
+    loadPlaylist("https://iptv-org.github.io/iptv/index.m3u");
     player.addListener(new Player.Listener(){
       @Override public void onPlayerError(androidx.media3.common.PlaybackException e){runOnUiThread(()->status.setText("تعذر تشغيل البث: "+e.getErrorCodeName()));}
       @Override public void onPlaybackStateChanged(int state){
