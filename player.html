@@ -48,7 +48,13 @@ video{display:block;width:100%;aspect-ratio:16/9;max-height:65vh;background:#000
 </main>
 <script>
 "use strict";
-const PLAYLIST="https://iptv-org.github.io/iptv/index.m3u";
+const PLAYLISTS=[
+ "https://iptv-org.github.io/iptv/index.m3u",
+ "https://iptv-org.github.io/iptv/index.country.m3u",
+ "https://iptv-org.github.io/iptv/regions/arab.m3u",
+ "https://iptv-org.github.io/iptv/languages/ara.m3u",
+ "https://iptv-org.github.io/iptv/countries/ma.m3u"
+];
 const $=id=>document.getElementById(id),video=$("video"),list=$("channel-list"),statusBox=$("status");
 let channels=[],hls=null,selected=null,visibleCount=200;
 function stopPlayer(){if(hls){hls.destroy();hls=null;}video.pause();video.removeAttribute("src");video.load();}
@@ -109,36 +115,52 @@ async function readCachedPlaylist(){
  try{const db=await openDB();const value=await new Promise((resolve,reject)=>{const req=db.transaction("playlists").objectStore("playlists").get("default");req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});db.close();return value||null;}catch(e){return null;}
 }
 function parseM3U(text){
- const lines=text.split(/\r?\n/),found=[];let meta=null;
+ const lines=text.replace(/^\\uFEFF/,"").split(/\\r?\\n/),found=[];let meta=null;
  for(const raw of lines){const line=raw.trim();if(!line)continue;
   if(line.startsWith("#EXTINF")){meta=line;continue;}
   if(meta&&!line.startsWith("#")){
-   const comma=meta.lastIndexOf(","),name=comma>=0?meta.slice(comma+1).trim():"Unnamed channel";
-   const logo=(meta.match(/tvg-logo="([^"]*)"/i)||[])[1]||"";
-   const group=(meta.match(/group-title="([^"]*)"/i)||[])[1]||"";
-   found.push({name:name||"Unnamed channel",url:line,logo,group});meta=null;
+   const attr=k=>{const m=meta.match(new RegExp("(?:^|\\\\s)"+k+"=[\\\\"']([^\\\\"']*)[\\\\"']","i"));return m?m[1]:"";};
+   const comma=meta.lastIndexOf(","),name=comma>=0?meta.slice(comma+1).trim():(attr("tvg-name")||"Unnamed channel");
+   found.push({name:name||"Unnamed channel",url:line,logo:attr("tvg-logo"),group:attr("group-title"),country:attr("tvg-country"),language:attr("tvg-language"),id:attr("tvg-id")});meta=null;
   }
  }
  return found;
 }
 async function loadM3U(){
- $("count").textContent="جارٍ استخراج القنوات...";
- try{
-  const res=await fetch(PLAYLIST,{cache:"no-store"});
-  if(!res.ok)throw new Error("HTTP "+res.status);
-  const text=await res.text();await cachePlaylist(text);channels=parseM3U(text);
-  statusBox.textContent="تم استخراج "+channels.length.toLocaleString()+" قناة وحفظ القائمة لاستخدامها عند انقطاع الإنترنت.";
-  render();
- }catch(e){
-  const cached=await readCachedPlaylist();
-  if(cached){channels=parseM3U(cached);render();statusBox.textContent="أنت غير متصل. هذه قائمة القنوات المحفوظة سابقاً ("+channels.length.toLocaleString()+"). تشغيل البث يحتاج اتصالاً بالإنترنت عادةً.";}
-  else{list.innerHTML='<div class="empty">لا يوجد اتصال ولم تُحفظ قائمة سابقة. اتصل بالإنترنت مرة واحدة لتحميل القنوات.</div>';$("count").textContent="لا توجد قائمة محفوظة";}
+ $("count").textContent="جارٍ جمع القنوات من قوائم الدول واللغات والمناطق...";
+ const merged=new Map();let successful=0;
+ const results=await Promise.allSettled(PLAYLISTS.map(async url=>{
+  const res=await fetch(url,{cache:"no-store"});if(!res.ok)throw new Error("HTTP "+res.status);
+  const text=await res.text();if(!text.includes("#EXTM3U"))throw new Error("Invalid M3U");
+  return {url,text};
+ }));
+ for(const result of results){
+  if(result.status!=="fulfilled")continue;
+  successful++;const parsed=parseM3U(result.value.text);
+  for(const c of parsed){if(c.url&&!merged.has(c.url))merged.set(c.url,c);}
  }
+ if(successful&&merged.size){
+  channels=[...merged.values()];
+  const combined=["#EXTM3U"];
+  for(const c of channels){
+   const attrs=[["tvg-logo",c.logo],["tvg-country",c.country],["tvg-language",c.language],["tvg-id",c.id],["group-title",c.group]].filter(x=>x[1]).map(x=>x[0]+'="'+x[1].replace(/"/g,"&quot;")+'"').join(" ");
+   combined.push("#EXTINF:-1 "+attrs+","+c.name,c.url);
+  }
+  await cachePlaylist(combined.join("\\n"));render();
+  statusBox.textContent="تم تحديث "+channels.length.toLocaleString()+" قناة من "+successful+" مصادر (العالم، الدول، اللغات والمنطقة العربية والمغرب).";
+  return;
+ }
+ const cached=await readCachedPlaylist();
+ if(cached){channels=parseM3U(cached);render();statusBox.textContent="تعذر الوصول للمصادر حالياً. تعرض القائمة المحفوظة ("+channels.length.toLocaleString()+" قناة). تشغيل البث يحتاج اتصالاً بالإنترنت.";}
+ else{list.innerHTML='<div class="empty">تعذر الاتصال بمصادر القنوات ولم توجد قائمة محفوظة. تحقق من الإنترنت ثم أعد المحاولة.</div>';$("count").textContent="تعذر تحميل القائمة";}
 }
 $("search").addEventListener("input",render);
 $("reload").addEventListener("click",loadM3U);
 $("toChannels").addEventListener("click",()=>{document.querySelector(".channels-head").scrollIntoView({behavior:"smooth",block:"start"});});
 $("saveData").addEventListener("change",()=>{if(selected)playStream(selected);});
 loadM3U();
+// Refresh playlist metadata automatically every six hours while the app is open.
+setInterval(()=>{if(document.visibilityState==="visible")loadM3U();},6*60*60*1000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&Date.now()-(window._iptvLastRefresh||0)>30*60*1000){window._iptvLastRefresh=Date.now();loadM3U();}});
 </script>
 </body></html>
