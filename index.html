@@ -26,6 +26,10 @@ main{max-width:1400px;margin:auto;padding:14px}.notice{background:#17263a;border
 .empty{padding:28px 12px;text-align:center;color:var(--muted);background:#111c2d88;border:1px dashed var(--line);border-radius:14px}.hidden{display:none!important}.footer{text-align:center;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding:22px 10px;margin-top:28px}
 @media(max-width:720px){main{padding:10px}.toolbar{grid-template-columns:1fr 1fr}.toolbar input{grid-column:1/-1}.toolbar button{padding:10px}.hero{padding:14px}.hero-icon{font-size:32px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.channel-list{grid-template-columns:1fr}.player-wrap video{max-height:45vh}.brand{font-size:18px}header{padding:10px}.head-actions button{padding:9px 10px}}
 @media(min-width:1050px){.player-wrap{max-width:1000px;margin-inline:auto}.player-wrap video{max-height:62vh}}
+
+.install-app{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin:0 0 9px;padding:9px 12px;border:1px solid #476487;border-radius:11px;background:linear-gradient(90deg,#1b3655,#243b5a);color:#fff;font-size:13px;font-weight:800;cursor:pointer}
+.install-app:active{transform:scale(.99)}
+.install-app .install-mark{font-size:16px}
 </style></head>
 <body>
 <header><div class="brand">📺 <b>IPTV</b> WORLD</div><div class="head-actions"><button class="secondary" id="homeBtn">الرئيسية</button><button class="secondary" id="langBtn">FR</button></div></header>
@@ -33,6 +37,7 @@ main{max-width:1400px;margin:auto;padding:14px}.notice{background:#17263a;border
 <div class="notice" id="notice">استخدم فقط قوائم وروابط البث التي تملك حق مشاهدتها أو توزيعها. لا يوفر التطبيق تجاوز الاشتراكات أو الوصول إلى القنوات المدفوعة. قد لا تعمل بعض الروابط بسبب قيود المصدر أو المتصفح.</div>
 <section class="hero"><div><h1 id="heroTitle">عالم القنوات بين يديك</h1><p id="heroText">اختر قائمة M3U قانونية، ابحث عن قناتك، وشاهد عبر المشغّل المدمج.</p></div><div class="hero-icon">🌍📡</div></section>
 <div class="toolbar"><input class="field" id="search" type="search" placeholder="ابحث عن قناة أو دولة..." aria-label="بحث"><select class="field" id="filter"><option value="all">كل القنوات</option><option value="favorites">المفضلة ★</option><option value="morocco">المغرب 🇲🇦</option><option value="sport">الرياضة ⚽</option><option value="movies">الأفلام 🎬</option></select><button id="addBtn">＋ قائمة M3U</button><button class="secondary" id="reloadBtn">تحديث</button></div>
+<button class="install-app" id="installAppBtn" type="button"><span class="install-mark">⬇</span> تحميل / تثبيت التطبيق</button>
 <div class="player-wrap"><div class="player-head"><span class="now-title" id="nowTitle">لم يتم اختيار قناة</span><span class="live-dot">● PLAYER</span></div><video id="video" controls playsinline preload="none"></video><div class="player-status" id="status">اختر قناة من القائمة لبدء التشغيل. بعض القنوات تتطلب متصفحاً أو جهازاً متوافقاً.</div></div>
 <section class="notice" aria-label="القناة الرياضية المغربية">
   <div class="row" style="justify-content:space-between">
@@ -110,4 +115,17 @@ $("addBtn").addEventListener("click",addList);$("fileInput").addEventListener("c
 $("homeBtn").addEventListener("click",()=>{setCategory("all");home()});$("backBtn").addEventListener("click",home);$("reloadBtn").addEventListener("click",()=>loadUrl(S.playlist||DEFAULT));$("search").addEventListener("input",()=>{S.country=null;render()});$("filter").addEventListener("change",()=>setCategory($("filter").value));$("chips").addEventListener("click",e=>{const b=e.target.closest("button[data-cat]");if(b)setCategory(b.dataset.cat)});$("langBtn").addEventListener("click",()=>{S.lang=S.lang==="ar"?"fr":"ar";language()});video.addEventListener("error",()=>status("تعذر تشغيل البث. قد يكون الرابط متوقفاً أو يتطلب صيغة غير مدعومة."));language();render();loadUrl(S.playlist||DEFAULT);setInterval(()=>{if(document.visibilityState==="visible"&&S.playlist===DEFAULT)loadDefault()},6*60*60*1000);
 if("serviceWorker"in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 })();
-</script></body></html>
+</script>
+<script>
+(()=>{
+ let installPrompt=null;const btn=document.getElementById('installAppBtn');if(!btn)return;
+ window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;btn.textContent='⬇ تثبيت IPTV WORLD على الهاتف';});
+ window.addEventListener('appinstalled',()=>{installPrompt=null;btn.textContent='✓ تم تثبيت IPTV WORLD';btn.disabled=true;});
+ btn.addEventListener('click',async()=>{
+  if(installPrompt){installPrompt.prompt();const choice=await installPrompt.userChoice;installPrompt=null;btn.textContent=choice.outcome==='accepted'?'تم طلب تثبيت التطبيق':'تحميل / تثبيت التطبيق';return;}
+  if(window.matchMedia('(display-mode: standalone)').matches){alert('التطبيق مثبت بالفعل على هذا الجهاز.');return;}
+  alert('لتثبيت IPTV WORLD: افتح قائمة Chrome ⋮ ثم اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية». إذا لم يظهر الخيار، حدّث الصفحة وافتح الرابط مباشرة في Chrome.');
+ });
+})();
+</script>
+</body></html>
