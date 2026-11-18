@@ -115,13 +115,13 @@ async function readCachedPlaylist(){
  try{const db=await openDB();const value=await new Promise((resolve,reject)=>{const req=db.transaction("playlists").objectStore("playlists").get("default");req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});db.close();return value||null;}catch(e){return null;}
 }
 function parseM3U(text){
- const lines=text.replace(/^\\uFEFF/,"").split(/\\r?\\n/),found=[];let meta=null;
+ const lines=text.replace(/^\uFEFF/,"").split(/\r?\n/),found=[];let meta=null;
  for(const raw of lines){const line=raw.trim();if(!line)continue;
   if(line.startsWith("#EXTINF")){meta=line;continue;}
   if(meta&&!line.startsWith("#")){
-   const attr=k=>{const m=meta.match(new RegExp("(?:^|\\\\s)"+k+"=[\\\\"']([^\\\\"']*)[\\\\"']","i"));return m?m[1]:"";};
-   const comma=meta.lastIndexOf(","),name=comma>=0?meta.slice(comma+1).trim():(attr("tvg-name")||"Unnamed channel");
-   found.push({name:name||"Unnamed channel",url:line,logo:attr("tvg-logo"),group:attr("group-title"),country:attr("tvg-country"),language:attr("tvg-language"),id:attr("tvg-id")});meta=null;
+   const attrs={};for(const m of meta.matchAll(/([\w-]+)="([^"]*)"/g))attrs[m[1].toLowerCase()]=m[2];
+   const comma=meta.lastIndexOf(","),name=comma>=0?meta.slice(comma+1).trim():(attrs["tvg-name"]||"Unnamed channel");
+   found.push({name:name||"Unnamed channel",url:line,logo:attrs["tvg-logo"]||"",group:attrs["group-title"]||"",country:attrs["tvg-country"]||"",language:attrs["tvg-language"]||"",id:attrs["tvg-id"]||""});meta=null;
   }
  }
  return found;
@@ -132,12 +132,12 @@ async function loadM3U(){
  const results=await Promise.allSettled(PLAYLISTS.map(async url=>{
   const res=await fetch(url,{cache:"no-store"});if(!res.ok)throw new Error("HTTP "+res.status);
   const text=await res.text();if(!text.includes("#EXTM3U"))throw new Error("Invalid M3U");
-  return {url,text};
+  return text;
  }));
  for(const result of results){
   if(result.status!=="fulfilled")continue;
-  successful++;const parsed=parseM3U(result.value.text);
-  for(const c of parsed){if(c.url&&!merged.has(c.url))merged.set(c.url,c);}
+  successful++;
+  for(const channel of parseM3U(result.value))if(channel.url&&!merged.has(channel.url))merged.set(channel.url,channel);
  }
  if(successful&&merged.size){
   channels=[...merged.values()];
@@ -146,9 +146,9 @@ async function loadM3U(){
    const attrs=[["tvg-logo",c.logo],["tvg-country",c.country],["tvg-language",c.language],["tvg-id",c.id],["group-title",c.group]].filter(x=>x[1]).map(x=>x[0]+'="'+x[1].replace(/"/g,"&quot;")+'"').join(" ");
    combined.push("#EXTINF:-1 "+attrs+","+c.name,c.url);
   }
-  await cachePlaylist(combined.join("\\n"));render();
+  await cachePlaylist(combined.join("\n"));render();
   statusBox.textContent="تم تحديث "+channels.length.toLocaleString()+" قناة من "+successful+" مصادر (العالم، الدول، اللغات والمنطقة العربية والمغرب).";
-  return;
+  window._iptvLastRefresh=Date.now();return;
  }
  const cached=await readCachedPlaylist();
  if(cached){channels=parseM3U(cached);render();statusBox.textContent="تعذر الوصول للمصادر حالياً. تعرض القائمة المحفوظة ("+channels.length.toLocaleString()+" قناة). تشغيل البث يحتاج اتصالاً بالإنترنت.";}
