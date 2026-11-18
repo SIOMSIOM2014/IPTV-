@@ -85,26 +85,35 @@ function render(){const list=activeList(),isCountry=!!S.country;$("countriesView
 function home(){S.country=null;$("listTitle").textContent=translations[S.lang].title;render()}
 function loadText(raw,label){const parsed=parseM3U(raw);if(!parsed.length){alert("لم يتم العثور على روابط قنوات صالحة في قائمة M3U.");return false}S.channels=parsed;S.country=null;$("listTitle").textContent=translations[S.lang].title;store.set("playlist",S.playlist);$("notice").textContent="تم تحميل "+parsed.length+" قناة من "+label+". تأكد من حقوق استخدام كل رابط.";render();return true}
 async function loadDefault(){
- status("جارٍ تحميل القنوات المغربية والعربية والعالمية...");
- const results=await Promise.allSettled(DEFAULT_PLAYLISTS.map(async url=>{
-  const r=await fetch(url,{cache:"no-store"});if(!r.ok)throw Error("HTTP "+r.status);
-  const raw=await r.text();if(!raw.includes("#EXTM3U"))throw Error("M3U غير صالح");return {url,items:parseM3U(raw)};
- }));
- const merged=new Map();let ok=0,maCount=0;
- for(let i=0;i<results.length;i++){
-  const result=results[i];if(result.status!=="fulfilled")continue;ok++;
-  for(const original of result.value.items){
-   if(!original.url||merged.has(original.url))continue;
-   const ch={...original};
-   if(i===0){ch.country=ch.country||"Morocco";ch.group=ch.group||"Morocco";maCount++;}
-   merged.set(ch.url,ch);
-  }
- }
- if(!merged.size){status("تعذر الوصول إلى قوائم القنوات. تحقق من الإنترنت ثم أعد المحاولة.");return;}
- S.channels=[...merged.values()];S.country=null;S.playlist=DEFAULT;store.set("playlist",DEFAULT);
- $("notice").textContent="تم تحميل "+S.channels.length+" قناة من "+ok+" قوائم. عدد روابط قائمة المغرب: "+maCount+". قد تتوقف بعض البثوث أو تمنع التشغيل من المتصفح بسبب قيود المصدر.";
+ status("⚡ بدء البحث السريع عن القنوات — مهلة كل مصدر 10 ثوانٍ...");
+ const merged=new Map();let ok=0,failed=0,maCount=0,finished=0;
+ S.channels=[];S.country=null;S.playlist=DEFAULT;store.set("playlist",DEFAULT);
  $("listTitle").textContent=translations[S.lang].title;render();
- status("تم تحميل "+S.channels.length+" قناة. إذا لم تعمل قناة بعينها فقد يكون رابط البث متوقفاً أو محمياً من المصدر.");
+ const jobs=DEFAULT_PLAYLISTS.map(async(url,index)=>{
+  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),10000);
+  try{
+   const r=await fetch(url,{cache:"no-store",signal:controller.signal});
+   if(!r.ok)throw Error("HTTP "+r.status);
+   const raw=await r.text();if(!raw.includes("#EXTM3U"))throw Error("M3U غير صالح");
+   const items=parseM3U(raw);if(!items.length)throw Error("لا توجد قنوات في المصدر");
+   ok++;
+   for(const original of items){
+    if(!original.url||merged.has(original.url))continue;
+    const ch={...original};
+    if(index===0){ch.country=ch.country||"Morocco";ch.group=ch.group||"Morocco";maCount++;}
+    merged.set(ch.url,ch);
+   }
+   S.channels=[...merged.values()];render();
+   status("⚡ تم استخراج "+S.channels.length+" قناة حتى الآن ("+ok+" مصادر تعمل)، وجارٍ استكمال بقية الدول...");
+  }catch(e){
+   failed++;const reason=e.name==="AbortError"?"انتهت مهلة 10 ثوانٍ للمصدر":"تعذر المصدر";
+   status("تم تحميل "+S.channels.length+" قناة حتى الآن. "+reason+"؛ نتابع بقية المصادر...");
+  }finally{clearTimeout(timeout);finished++;}
+ });
+ await Promise.allSettled(jobs);
+ if(!S.channels.length){status("لم تصل أي قائمة خلال 10 ثوانٍ. تحقق من الإنترنت أو جرّب التحديث لاحقاً.");return;}
+ $("notice").textContent="تم تحميل "+S.channels.length+" قناة من "+ok+" مصادر. روابط المغرب: "+maCount+". مصادر لم تستجب: "+failed+".";
+ status("اكتمل البحث: "+S.channels.length+" قناة من "+ok+" مصادر. "+(failed?"بعض المصادر لم تستجب خلال 10 ثوانٍ.":"جميع المصادر المستجيبة حُمّلت."));
 }
 async function loadUrl(url){
  if(url===DEFAULT){await loadDefault();return;}
