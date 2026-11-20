@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://siomsiom2014.github.io/IPTV-/sitemap.xml
