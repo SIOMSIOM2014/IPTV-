@@ -14,6 +14,11 @@ permissions:
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
+    env:
+      RELEASE_KEYSTORE_BASE64: ${{ secrets.IPTV_RELEASE_KEYSTORE_BASE64 }}
+      IPTV_RELEASE_STORE_PASSWORD: ${{ secrets.IPTV_RELEASE_STORE_PASSWORD }}
+      IPTV_RELEASE_KEY_ALIAS: ${{ secrets.IPTV_RELEASE_KEY_ALIAS }}
+      IPTV_RELEASE_KEY_PASSWORD: ${{ secrets.IPTV_RELEASE_KEY_PASSWORD }}
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -40,11 +45,6 @@ jobs:
           PY
       - name: Build permanently signed release APK when signing secrets are configured
         if: env.RELEASE_KEYSTORE_BASE64 != ''
-        env:
-          RELEASE_KEYSTORE_BASE64: ${{ secrets.IPTV_RELEASE_KEYSTORE_BASE64 }}
-          IPTV_RELEASE_STORE_PASSWORD: ${{ secrets.IPTV_RELEASE_STORE_PASSWORD }}
-          IPTV_RELEASE_KEY_ALIAS: ${{ secrets.IPTV_RELEASE_KEY_ALIAS }}
-          IPTV_RELEASE_KEY_PASSWORD: ${{ secrets.IPTV_RELEASE_KEY_PASSWORD }}
         run: |
           echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/iptv-world-release.jks"
           cd android
@@ -66,8 +66,8 @@ jobs:
       - name: Publish GitHub Release
         uses: ncipollo/release-action@v1
         with:
-          tag: v2.0.0-build-${{ github.run_number }}-${{ github.run_attempt }}
-          name: IPTV WORLD Android v2.0 (testing build ${{ github.run_number }}.${{ github.run_attempt }})
+          tag: v2.1.0-build-${{ github.run_number }}-${{ github.run_attempt }}
+          name: IPTV WORLD Android v2.1 (build ${{ github.run_number }}.${{ github.run_attempt }})
           prerelease: true
           draft: true
           generateReleaseNotes: true
@@ -80,4 +80,4 @@ jobs:
       - name: Publish draft after assets are uploaded
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release edit "v2.0.0-build-${{ github.run_number }}-${{ github.run_attempt }}" --draft=false
+        run: gh release edit "v2.1.0-build-${{ github.run_number }}-${{ github.run_attempt }}" --draft=false
