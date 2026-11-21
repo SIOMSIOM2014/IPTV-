@@ -91,7 +91,7 @@ const DEFAULT_PLAYLISTS=[
 const $=id=>document.getElementById(id);
 const store={get(k,d){try{const v=localStorage.getItem("iptvw_"+k);return v===null?d:JSON.parse(v)}catch(_){return d}},set(k,v){try{localStorage.setItem("iptvw_"+k,JSON.stringify(v))}catch(_){}}},
 S={channels:[],country:null,category:"all",favorites:new Set(store.get("favorites",[])),hls:null,playlist:store.get("playlist",DEFAULT),lang:store.get("lang","ar")},video=$("video");
-const translations={ar:{home:"الرئيسية",search:"ابحث عن قناة أو دولة...",all:"كل القنوات",fav:"المفضلة ★",morocco:"المغرب 🇲🇦",sport:"الرياضة ⚽",movies:"الأفلام 🎬",add:"＋ قائمة M3U",reload:"تحديث",title:"الأقسام والقنوات",notice:"استخدم فقط قوائم وروابط البث التي تملك حق مشاهدتها أو توزيعها. لا يوفر التطبيق تجاوز الاشتراكات أو الوصول إلى القنوات المدفوعة. قد لا تعمل بعض الروابط بسبب قيود المصدر أو المتصفح.",hero:"عالم القنوات بين يديك",heroText:"اختر قائمة M3U قانونية، ابحث عن قناتك، وشاهد عبر المشغّل المدمج."},fr:{home:"Accueil",search:"Rechercher une chaîne ou un pays...",all:"Toutes les chaînes",fav:"Favoris ★",morocco:"Maroc 🇲🇦",sport:"Sport ⚽",movies:"Films 🎬",add:"＋ Liste M3U",reload:"Actualiser",title:"Catégories et chaînes",notice:"Utilisez uniquement les listes et flux que vous êtes autorisé à regarder ou distribuer. L’application ne contourne aucun abonnement.",hero:"Les chaînes à portée de main",heroText:"Ajoutez une liste M3U autorisée, recherchez une chaîne et lancez-la dans le lecteur intégré."}};
+const translations={ar:{home:"الرئيسية",search:"ابحث عن قناة أو دولة...",all:"كل القنوات",fav:"المفضلة ★",morocco:"المغرب 🇲🇦",sport:"الرياضة ⚽",movies:"الأفلام 🎬",add:"＋ دمج قوائم M3U",reload:"تحديث",title:"الأقسام والقنوات",notice:"استخدم فقط قوائم وروابط البث التي تملك حق مشاهدتها أو توزيعها. لا يوفر التطبيق تجاوز الاشتراكات أو الوصول إلى القنوات المدفوعة. قد لا تعمل بعض الروابط بسبب قيود المصدر أو المتصفح.",hero:"عالم القنوات بين يديك",heroText:"اختر قائمة M3U قانونية، ابحث عن قناتك، وشاهد عبر المشغّل المدمج."},fr:{home:"Accueil",search:"Rechercher une chaîne ou un pays...",all:"Toutes les chaînes",fav:"Favoris ★",morocco:"Maroc 🇲🇦",sport:"Sport ⚽",movies:"Films 🎬",add:"＋ Fusionner M3U",reload:"Actualiser",title:"Catégories et chaînes",notice:"Utilisez uniquement les listes et flux que vous êtes autorisé à regarder ou distribuer. L’application ne contourne aucun abonnement.",hero:"Les chaînes à portée de main",heroText:"Ajoutez une liste M3U autorisée, recherchez une chaîne et lancez-la dans le lecteur intégré."}};
 function txt(s){return String(s||"").toLowerCase()}
 function parseM3U(raw){const out=[];let meta={};for(const line0 of raw.replace(/\r/g,"").split("\n")){const line=line0.trim();if(!line)continue;if(line.startsWith("#EXTINF")){const a={};for(const m of line.matchAll(/([\w-]+)="([^"]*)"/g))a[m[1].toLowerCase()]=m[2];const i=line.lastIndexOf(",");meta={name:i>=0?line.slice(i+1).trim():(a["tvg-name"]||"قناة بدون اسم"),logo:a["tvg-logo"]||"",country:a["tvg-country"]||"",group:a["group-title"]||"",id:a["tvg-id"]||""}}else if(/^https?:\/\//i.test(line)&&meta.name){out.push({...meta,url:line});meta={}}}return out}
 function id(ch){return ch.url+"|"+ch.name}
@@ -146,7 +146,32 @@ async function loadUrl(url){
  status("جارٍ تحميل قائمة القنوات...");
  try{const r=await fetch(url,{cache:"no-store"});if(!r.ok)throw Error("HTTP "+r.status);const raw=await r.text();S.playlist=url;if(loadText(raw,url))store.set("playlist",url)}
  catch(e){status("تعذر تحميل القائمة تلقائياً: "+e.message+". يمكنك اختيار ملف M3U من هاتفك.");$("notice").textContent="تعذر الوصول إلى القائمة. قد يمنع المصدر طلبات المتصفح (CORS)، أو تحقق من اتصال الإنترنت."}}
-function addList(){const v=prompt("الصق رابط قائمة M3U تملك حق استخدامها. اضغط إلغاء لاختيار ملف من الهاتف.");if(v===null){$("fileInput").click();return}if(v.trim())loadUrl(v.trim());else $("fileInput").click()}
+async function addList(){
+ const v=prompt("الصق رابطاً أو عدة روابط M3U (رابط في كل سطر) لمصادر تملك حق استخدامها. سيتم دمج القنوات مع القائمة الحالية دون حذفها. لإضافة ملف من الهاتف اضغط إلغاء.");
+ if(v===null){$("fileInput").click();return}
+ const urls=[...new Set(v.split(/\\s+/).map(x=>x.trim()).filter(x=>/^https?:\\/\\//i.test(x)))];
+ if(!urls.length){alert("لم يتم العثور على روابط HTTP/HTTPS صالحة.");return}
+ const merged=new Map(S.channels.map(ch=>[ch.url,ch]));let loaded=0,failed=0;
+ status("جارٍ دمج "+urls.length+" قائمة M3U مع القنوات الحالية...");
+ await Promise.all(urls.map(async url=>{
+  const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),12000);
+  try{
+   const r=await fetch(url,{cache:"no-store",signal:controller.signal});
+   if(!r.ok)throw Error("HTTP "+r.status);
+   const raw=await r.text();const items=parseM3U(raw);
+   if(!items.length)throw Error("قائمة فارغة أو غير صالحة");
+   items.forEach(ch=>{if(!merged.has(ch.url))merged.set(ch.url,ch)});
+   loaded++;
+  }catch(e){failed++}
+  finally{clearTimeout(timer)}
+ }));
+ S.channels=[...merged.values()];S.country=null;S.playlist="";
+ store.set("playlist","");
+ $("listTitle").textContent=translations[S.lang].title;
+ $("notice").textContent="تم دمج "+loaded+" قائمة بنجاح. تمت إضافة "+S.channels.length+" قناة إجمالاً بعد إزالة الروابط المكررة. القوائم التي لم تستجب: "+failed+".";
+ status("اكتمل الدمج: "+loaded+" من "+urls.length+" قوائم؛ إجمالي القنوات "+S.channels.length+".");
+ render();
+}
 function setCategory(c){S.category=c;S.country=null;$("filter").value=c==="all"?"all":c;$("chips").querySelectorAll("button").forEach(b=>b.classList.toggle("active",b.dataset.cat===c));$("listTitle").textContent=c==="all"?translations[S.lang].title:({morocco:"القنوات المغربية TNT",sport:"القنوات الرياضية",movies:"قنوات الأفلام",favorites:"المفضلة"})[c];render()}
 function language(){const t=translations[S.lang];$("homeBtn").textContent=t.home;$("search").placeholder=t.search;$("addBtn").textContent=t.add;$("reloadBtn").textContent=t.reload;$("heroTitle").textContent=t.hero;$("heroText").textContent=t.heroText;$("notice").textContent=t.notice;$("langBtn").textContent=S.lang==="ar"?"FR":"AR";document.documentElement.lang=S.lang;document.documentElement.dir=S.lang==="ar"?"rtl":"ltr";store.set("lang",S.lang)}
 $("addBtn").addEventListener("click",addList);$("fileInput").addEventListener("change",async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const raw=await f.text();if(loadText(raw,f.name)){S.playlist="";store.set("playlist","")}e.target.value=""});
