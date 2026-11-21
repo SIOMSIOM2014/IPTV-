@@ -50,7 +50,7 @@ jobs:
           tag: v2.0.0-build-${{ github.run_number }}-${{ github.run_attempt }}
           name: IPTV WORLD Android v2.0 (testing build ${{ github.run_number }}.${{ github.run_attempt }})
           prerelease: true
-          draft: false
+          draft: true
           generateReleaseNotes: true
           artifacts: "IPTV-WORLD.apk,IPTV-WORLD.apk.sha256"
           artifactErrorsFailBuild: true
@@ -58,3 +58,7 @@ jobs:
             Automated installable Android debug build of IPTV WORLD from the repository source.
             This is a testing build, not a production-signed release. It uses the Android WebView wrapper and requires internet access.
             Install only if you trust this source. Verify the SHA-256 checksum using the accompanying file.
+      - name: Publish draft after assets are uploaded
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "v2.0.0-build-${{ github.run_number }}-${{ github.run_attempt }}" --draft=false
