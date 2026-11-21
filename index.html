@@ -115,35 +115,32 @@ function render(){const list=activeList(),isCountry=!!S.country;renderRecent();$
 function home(){S.country=null;$("listTitle").textContent=translations[S.lang].title;render()}
 function loadText(raw,label){const parsed=parseM3U(raw);if(!parsed.length){alert("لم يتم العثور على روابط قنوات صالحة في قائمة M3U.");return false}S.channels=parsed;S.country=null;$("listTitle").textContent=translations[S.lang].title;store.set("playlist",S.playlist);$("notice").textContent="تم تحميل "+parsed.length+" قناة من "+label+". تأكد من حقوق استخدام كل رابط.";render();return true}
 async function loadDefault(){
- status("⚡ البحث عن القنوات جارٍ... نعرض النتائج فور وصول كل مصدر، وقد يستغرق المصدر البطيء حتى 30 ثانية.");
- const merged=new Map();let ok=0,failed=0,maCount=0,finished=0;
+ const url=DEFAULT;
+ const controller=new AbortController();
+ const timeout=setTimeout(()=>controller.abort(),90000);
  S.channels=[];S.country=null;S.playlist=DEFAULT;store.set("playlist",DEFAULT);
- $("listTitle").textContent=translations[S.lang].title;render();
- const jobs=DEFAULT_PLAYLISTS.map(async(url,index)=>{
-  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),30000);
-  try{
-   const r=await fetch(url,{cache:"no-store",signal:controller.signal});
-   if(!r.ok)throw Error("HTTP "+r.status);
-   const raw=await r.text();if(!raw.includes("#EXTM3U"))throw Error("M3U غير صالح");
-   const items=parseM3U(raw);if(!items.length)throw Error("لا توجد قنوات في المصدر");
-   ok++;
-   for(const original of items){
-    if(!original.url||merged.has(original.url))continue;
-    const ch={...original};
-    if(url.includes("/countries/ma.m3u")){ch.country=ch.country||"Morocco";ch.group=ch.group||"Morocco";maCount++;}
-    merged.set(ch.url,ch);
-   }
-   S.channels=[...merged.values()];render();
-   status("⚡ تم استخراج "+S.channels.length+" قناة حتى الآن ("+ok+" مصادر تعمل)، وجارٍ استكمال بقية الدول...");
-  }catch(e){
-   failed++;const reason=e.name==="AbortError"?"انتهت مهلة 30 ثانية للمصدر":"تعذر المصدر";
-   status("تم تحميل "+S.channels.length+" قناة حتى الآن. "+reason+"؛ نتابع بقية المصادر...");
-  }finally{clearTimeout(timeout);finished++;}
- });
- await Promise.allSettled(jobs);
- if(!S.channels.length){status("لم تصل أي قائمة خلال 20 ثانية. تحقق من الإنترنت أو جرّب التحديث لاحقاً.");return;}
- $("notice").textContent="تم تحميل "+S.channels.length+" قناة من "+ok+" مصادر. روابط المغرب: "+maCount+". مصادر لم تستجب: "+failed+".";
- status("اكتمل البحث: "+S.channels.length+" قناة من "+ok+" مصادر. "+(failed?"بعض المصادر لم تستجب خلال 20 ثانية.":"جميع المصادر المستجيبة حُمّلت."));
+ $("listTitle").textContent=translations[S.lang].title;
+ render();
+ status("جارٍ تحميل القائمة الأصلية كاملة من المصدر المحدد...");
+ try{
+  const response=await fetch(url,{cache:"no-store",signal:controller.signal,mode:"cors"});
+  if(!response.ok)throw new Error("HTTP "+response.status);
+  const raw=await response.text();
+  if(!raw.includes("#EXTM3U"))throw new Error("الاستجابة ليست ملف M3U صالحاً");
+  const parsed=parseM3U(raw);
+  if(!parsed.length)throw new Error("لم يتم العثور على قنوات قابلة للقراءة");
+  const unique=new Map();
+  for(const ch of parsed){if(ch.url&&!unique.has(ch.url))unique.set(ch.url,ch);}
+  S.channels=[...unique.values()];
+  S.country=null;
+  render();
+  $("notice").textContent="تم تحميل "+S.channels.length+" قناة من القائمة الأصلية.";
+  status("اكتمل تحميل القائمة الأصلية: "+S.channels.length+" قناة. عدد القنوات يعكس محتوى المصدر وقت التحميل.");
+ }catch(error){
+  const message=error.name==="AbortError"?"انتهت مهلة تحميل القائمة بعد 90 ثانية.":"تعذر تحميل القائمة: "+error.message;
+  status(message+" قد يمنع اتصال الشبكة أو المتصفح الوصول إلى المصدر.");
+  $("notice").textContent="لم يكتمل تحميل القائمة الأصلية. تحقق من الاتصال ثم اضغط تحديث لإعادة المحاولة.";
+ }finally{clearTimeout(timeout);}
 }
 async function loadUrl(url){
  if(url===DEFAULT){await loadDefault();return;}
