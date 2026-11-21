@@ -139,9 +139,9 @@ async function loadDefault(){
   }finally{clearTimeout(timeout);finished++;}
  });
  await Promise.allSettled(jobs);
- if(!S.channels.length){status("لم تصل أي قائمة خلال 10 ثوانٍ. تحقق من الإنترنت أو جرّب التحديث لاحقاً.");return;}
+ if(!S.channels.length){status("لم تصل أي قائمة خلال 20 ثانية. تحقق من الإنترنت أو جرّب التحديث لاحقاً.");return;}
  $("notice").textContent="تم تحميل "+S.channels.length+" قناة من "+ok+" مصادر. روابط المغرب: "+maCount+". مصادر لم تستجب: "+failed+".";
- status("اكتمل البحث: "+S.channels.length+" قناة من "+ok+" مصادر. "+(failed?"بعض المصادر لم تستجب خلال 10 ثوانٍ.":"جميع المصادر المستجيبة حُمّلت."));
+ status("اكتمل البحث: "+S.channels.length+" قناة من "+ok+" مصادر. "+(failed?"بعض المصادر لم تستجب خلال 20 ثانية.":"جميع المصادر المستجيبة حُمّلت."));
 }
 async function loadUrl(url){
  if(url===DEFAULT){await loadDefault();return;}
