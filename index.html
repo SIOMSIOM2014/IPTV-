@@ -113,12 +113,12 @@ function render(){const list=activeList(),isCountry=!!S.country;renderRecent();$
 function home(){S.country=null;$("listTitle").textContent=translations[S.lang].title;render()}
 function loadText(raw,label){const parsed=parseM3U(raw);if(!parsed.length){alert("لم يتم العثور على روابط قنوات صالحة في قائمة M3U.");return false}S.channels=parsed;S.country=null;$("listTitle").textContent=translations[S.lang].title;store.set("playlist",S.playlist);$("notice").textContent="تم تحميل "+parsed.length+" قناة من "+label+". تأكد من حقوق استخدام كل رابط.";render();return true}
 async function loadDefault(){
- status("⚡ بدء البحث السريع عن القنوات — مهلة كل مصدر 10 ثوانٍ...");
+ status("⚡ البحث عن القنوات جارٍ... نعرض النتائج فور وصول كل مصدر، وقد يستغرق المصدر البطيء حتى 30 ثانية.");
  const merged=new Map();let ok=0,failed=0,maCount=0,finished=0;
  S.channels=[];S.country=null;S.playlist=DEFAULT;store.set("playlist",DEFAULT);
  $("listTitle").textContent=translations[S.lang].title;render();
  const jobs=DEFAULT_PLAYLISTS.map(async(url,index)=>{
-  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),10000);
+  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),30000);
   try{
    const r=await fetch(url,{cache:"no-store",signal:controller.signal});
    if(!r.ok)throw Error("HTTP "+r.status);
@@ -134,7 +134,7 @@ async function loadDefault(){
    S.channels=[...merged.values()];render();
    status("⚡ تم استخراج "+S.channels.length+" قناة حتى الآن ("+ok+" مصادر تعمل)، وجارٍ استكمال بقية الدول...");
   }catch(e){
-   failed++;const reason=e.name==="AbortError"?"انتهت مهلة 10 ثوانٍ للمصدر":"تعذر المصدر";
+   failed++;const reason=e.name==="AbortError"?"انتهت مهلة 30 ثانية للمصدر":"تعذر المصدر";
    status("تم تحميل "+S.channels.length+" قناة حتى الآن. "+reason+"؛ نتابع بقية المصادر...");
   }finally{clearTimeout(timeout);finished++;}
  });
