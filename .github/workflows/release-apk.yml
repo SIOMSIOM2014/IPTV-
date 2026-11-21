@@ -1,0 +1,60 @@
+name: Publish IPTV WORLD APK
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/release-apk.yml'
+      - 'android/**'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Prepare app icon resources
+        run: |
+          mkdir -p android/app/src/main/res/mipmap-mdpi android/app/src/main/res/mipmap-hdpi android/app/src/main/res/mipmap-xhdpi android/app/src/main/res/mipmap-xxhdpi android/app/src/main/res/mipmap-xxxhdpi
+          curl -fL 'https://raw.githubusercontent.com/SIOMSIOM2014/IPTV-/main/icon-512.png' -o /tmp/icon.png
+          python3 -m pip install --quiet pillow
+          python3 - <<'PY'
+          from PIL import Image
+          src=Image.open('/tmp/icon.png').convert('RGBA')
+          sizes={'mdpi':48,'hdpi':72,'xhdpi':96,'xxhdpi':144,'xxxhdpi':192}
+          for density,size in sizes.items():
+              src.resize((size,size),Image.Resampling.LANCZOS).save(f'android/app/src/main/res/mipmap-{density}/ic_launcher.png')
+          PY
+      - name: Build Android APK
+        run: |
+          cd android
+          gradle --no-daemon assembleDebug
+      - name: Prepare checksum
+        run: |
+          cp android/app/build/outputs/apk/debug/*.apk IPTV-WORLD.apk
+          sha256sum IPTV-WORLD.apk > IPTV-WORLD.apk.sha256
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v2.0.0-build-${{ github.run_number }}
+          name: IPTV WORLD Android v2.0 (build ${{ github.run_number }})
+          prerelease: true
+          generate_release_notes: true
+          body: |
+            Automated installable Android debug build of IPTV WORLD from the repository source.
+            This is a testing build, not a production-signed release. It uses the Android WebView wrapper and requires internet access.
+            Install only if you trust this source. Verify the SHA-256 checksum using the accompanying file.
+          files: |
+            IPTV-WORLD.apk
+            IPTV-WORLD.apk.sha256
