@@ -1,6 +1,11 @@
 package com.iptvworld.app;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
+import android.webkit.JavascriptInterface;
+import android.widget.Toast;
+import android.content.ActivityNotFoundException;
 import android.os.Bundle;
 import android.view.View;
 import android.webkit.WebChromeClient;
@@ -27,6 +32,7 @@ public class MainActivity extends Activity {
     webView = new WebView(this);
     webView.setBackgroundColor(Color.BLACK);
     webView.getSettings().setJavaScriptEnabled(true);
+    webView.addJavascriptInterface(new ExternalPlayerBridge(), "IPTVNative");
     webView.getSettings().setDomStorageEnabled(true);
     webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
     webView.getSettings().setLoadsImagesAutomatically(true);
@@ -64,6 +70,31 @@ public class MainActivity extends Activity {
     setContentView(root);
     if (savedInstanceState != null) webView.restoreState(savedInstanceState);
     else webView.loadUrl(PLAYER_URL);
+  }
+
+  private class ExternalPlayerBridge {
+    @JavascriptInterface public void openExternalPlayer(String rawUrl, String title) {
+      runOnUiThread(() -> {
+        try {
+          Uri uri = Uri.parse(rawUrl);
+          String scheme = uri.getScheme();
+          if (scheme == null || !(scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))) {
+            Toast.makeText(MainActivity.this, "رابط البث غير صالح", Toast.LENGTH_LONG).show();
+            return;
+          }
+          String path = uri.getPath() == null ? "" : uri.getPath().toLowerCase();
+          String mime = path.endsWith(".m3u8") ? "application/vnd.apple.mpegurl" : "video/*";
+          Intent intent = new Intent(Intent.ACTION_VIEW);
+          intent.setDataAndType(uri, mime);
+          intent.putExtra(Intent.EXTRA_TITLE, title == null ? "IPTV WORLD" : title);
+          startActivity(Intent.createChooser(intent, "اختر مشغّل الفيديو"));
+        } catch (ActivityNotFoundException e) {
+          Toast.makeText(MainActivity.this, "لا يوجد مشغّل خارجي متوافق مثبت على الجهاز", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+          Toast.makeText(MainActivity.this, "تعذر فتح الرابط في مشغّل خارجي", Toast.LENGTH_LONG).show();
+        }
+      });
+    }
   }
 
   @Override protected void onSaveInstanceState(Bundle outState) {
