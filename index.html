@@ -149,7 +149,7 @@ async function loadUrl(url){
 async function addList(){
  const v=prompt("الصق رابطاً أو عدة روابط M3U (رابط في كل سطر) لمصادر تملك حق استخدامها. سيتم دمج القنوات مع القائمة الحالية دون حذفها. لإضافة ملف من الهاتف اضغط إلغاء.");
  if(v===null){$("fileInput").click();return}
- const urls=[...new Set(v.split(/\\s+/).map(x=>x.trim()).filter(x=>/^https?:\\/\\//i.test(x)))];
+ const urls=[...new Set(v.split(/[\\r\\n]+/).map(x=>x.trim()).filter(x=>/^https?:\\/\\//i.test(x)))];
  if(!urls.length){alert("لم يتم العثور على روابط HTTP/HTTPS صالحة.");return}
  const merged=new Map(S.channels.map(ch=>[ch.url,ch]));let loaded=0,failed=0;
  status("جارٍ دمج "+urls.length+" قائمة M3U مع القنوات الحالية...");
