@@ -7,7 +7,6 @@ on:
       - '.github/workflows/release-apk.yml'
       - 'android/**'
       - 'player.html'
-      - 'android/app/build.gradle'
   workflow_dispatch:
 permissions:
   contents: write
@@ -43,17 +42,36 @@ jobs:
           for density,size in sizes.items():
               src.resize((size,size),Image.Resampling.LANCZOS).save(f'android/app/src/main/res/mipmap-{density}/ic_launcher.png')
           PY
-      - name: Build permanently signed release APK when signing secrets are configured
-        if: env.RELEASE_KEYSTORE_BASE64 != ''
+      - name: Validate permanent signing key
+        id: signing
+        shell: bash
         run: |
-          echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/iptv-world-release.jks"
+          set +e
+          KEY_FILE="$RUNNER_TEMP/iptv-world-release.jks"
+          VALID=false
+          if [[ -n "$RELEASE_KEYSTORE_BASE64" && -n "$IPTV_RELEASE_STORE_PASSWORD" && -n "$IPTV_RELEASE_KEY_ALIAS" && -n "$IPTV_RELEASE_KEY_PASSWORD" ]]; then
+            printf '%s' "$RELEASE_KEYSTORE_BASE64" | tr -d '[:space:]' | base64 --decode > "$KEY_FILE" 2>/dev/null
+            if [[ $? -eq 0 && -s "$KEY_FILE" ]]; then
+              keytool -list -keystore "$KEY_FILE" -storepass "$IPTV_RELEASE_STORE_PASSWORD" -alias "$IPTV_RELEASE_KEY_ALIAS" >/dev/null 2>&1
+              if [[ $? -eq 0 ]]; then VALID=true; fi
+            fi
+          fi
+          echo "valid=$VALID" >> "$GITHUB_OUTPUT"
+          if [[ "$VALID" == "true" ]]; then
+            echo "A valid signing key was found."
+          else
+            echo "::warning::Signing secrets are missing or invalid. Building a debug/test APK instead; it is not suitable for Play Store release."
+          fi
+      - name: Build permanently signed release APK
+        if: steps.signing.outputs.valid == 'true'
+        run: |
           cd android
           IPTV_RELEASE_STORE_FILE="$RUNNER_TEMP/iptv-world-release.jks" gradle --no-daemon assembleRelease
           cp app/build/outputs/apk/release/*.apk ../IPTV-WORLD.apk
           cd ..
           echo "APK_KIND=release-signed" >> "$GITHUB_ENV"
-      - name: Build test APK when no permanent signing key is configured
-        if: env.RELEASE_KEYSTORE_BASE64 == ''
+      - name: Build test APK when signing key is unavailable
+        if: steps.signing.outputs.valid != 'true'
         run: |
           cd android
           gradle --no-daemon assembleDebug
@@ -61,8 +79,7 @@ jobs:
           cd ..
           echo "APK_KIND=debug-test" >> "$GITHUB_ENV"
       - name: Prepare checksum
-        run: |
-          sha256sum IPTV-WORLD.apk > IPTV-WORLD.apk.sha256
+        run: sha256sum IPTV-WORLD.apk > IPTV-WORLD.apk.sha256
       - name: Publish GitHub Release
         uses: ncipollo/release-action@v1
         with:
@@ -75,8 +92,9 @@ jobs:
           artifactErrorsFailBuild: true
           body: |
             Automated Android build of IPTV WORLD from the repository source.
-            Build type: ${{ env.APK_KIND }}. A permanently signed release is produced only when the four IPTV_RELEASE_* GitHub Actions secrets are configured. Otherwise this is a debug test build. The app currently loads its web player and can hand stream URLs to an installed external player. Internet access is required.
-            Install only if you trust this source. Verify the SHA-256 checksum using the accompanying file.
+            Build type: ${{ env.APK_KIND }}.
+            A release-signed APK is produced only when all four signing secrets are valid. If validation fails, the attached APK is a debug/test build and must not be submitted to Google Play.
+            Internet access is required. Verify the SHA-256 checksum using the accompanying file.
       - name: Publish draft after assets are uploaded
         env:
           GH_TOKEN: ${{ github.token }}
