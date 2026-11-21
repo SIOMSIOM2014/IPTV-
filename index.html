@@ -83,12 +83,12 @@ main{max-width:1400px;margin:auto;padding:14px}.notice{background:#17263a;border
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
 <script>
 (()=>{"use strict";
-const DEFAULT="https://iptv-org.github.io/iptv/index.m3u";
+const DEFAULT="https://iptv-org.github.io/iptv/index.country.m3u";
 const DEFAULT_PLAYLISTS=[
  "https://iptv-org.github.io/iptv/countries/ma.m3u",
  "https://iptv-org.github.io/iptv/regions/arab.m3u",
  "https://iptv-org.github.io/iptv/languages/ara.m3u",
- "https://iptv-org.github.io/iptv/index.m3u"
+ "https://iptv-org.github.io/iptv/index.country.m3u"
 ];
 const $=id=>document.getElementById(id);
 const store={get(k,d){try{const v=localStorage.getItem("iptvw_"+k);return v===null?d:JSON.parse(v)}catch(_){return d}},set(k,v){try{localStorage.setItem("iptvw_"+k,JSON.stringify(v))}catch(_){}}},
