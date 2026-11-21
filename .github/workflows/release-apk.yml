@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/release-apk.yml'
       - 'android/**'
+      - 'player.html'
   workflow_dispatch:
 permissions:
   contents: write
