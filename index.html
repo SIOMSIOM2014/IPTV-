@@ -156,39 +156,48 @@ function status(t){$("status").textContent=t}
 function stop(){if(S.hls){S.hls.destroy();S.hls=null}video.pause();video.removeAttribute("src");video.load()}
 function play(ch){stop();$("playerPanel").classList.remove("hidden");S.recent=[id(ch),...S.recent.filter(x=>x!==id(ch))].slice(0,12);store.set("recent",S.recent);renderRecent();$("nowTitle").textContent=ch.name;status("محاولة تشغيل: "+ch.name+" — إذا لم يبدأ البث فقد يكون المصدر غير متاح أو غير متوافق.");if(window.Hls&&Hls.isSupported()&&/\.m3u8(?:$|\?)/i.test(ch.url)){S.hls=new Hls({enableWorker:true,lowLatencyMode:false,capLevelToPlayerSize:true,startLevel:0,abrEwmaDefaultEstimate:350000,maxBufferLength:12,backBufferLength:20});S.hls.loadSource(ch.url);S.hls.attachMedia(video);S.hls.on(Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>status("اضغط زر التشغيل داخل المشغّل.")));S.hls.on(Hls.Events.ERROR,(_,d)=>{if(d.fatal)status("تعذر تشغيل البث. تحقق من الرابط أو جرّب قناة أخرى؛ قد تمنع قيود CORS تشغيله.")})}else{video.src=ch.url;video.play().catch(()=>status("اضغط تشغيل. إذا لم يعمل الرابط فقد لا يدعم المتصفح صيغة البث."))}if(innerWidth<800)document.querySelector(".player-wrap").scrollIntoView({behavior:"smooth",block:"start"})}
 function packageMatch(ch,key){const s=txt([ch.name,ch.group,ch.country,ch.id].join(" "));const rules={beinhd:/bein.*(hd)|\bhd\b.*bein/,beinsd:/bein.*(sd)|\bsd\b.*bein/,abudhabi:/abu.?dhabi|أبوظبي|ابوظبي/,sports:/sport|sports|football|soccer|رياضة|رياضية|كرة/,beinmovies:/bein.*(movie|film|series)|movie|movies|series|مسلسل|أفلام/,action:/action|cinema action|أكشن|اكشن/,arabic:/arab|العربية|عربي|arabic|international|دولي/,osn:/\bosn\b/,alfajer:/al.?fajer|الفجر/,quran:/quran|قرآن|القرآن|koran/};return key==="matches"||key==="m3u"||!key?false:(rules[key]||/\u0000/).test(s)}
-function activeList(){const q=txt($("search").value.trim()),f=$("filter").value,cat=S.category;return S.channels.filter(ch=>{const c=classify(ch),matchPackage=!S.packageKey||packageMatch(ch,S.packageKey),matchQ=!q||txt(ch.name+" "+ch.country+" "+ch.group).includes(q),matchF=f==="all"||(f==="favorites"&&S.favorites.has(id(ch)))||(f==="morocco"&&c==="morocco")||(f==="sport"&&c==="sport")||(f==="movies"&&c==="movies"),matchC=cat==="all"||(cat==="favorites"&&S.favorites.has(id(ch)))||c===cat;return matchPackage&&matchQ&&matchF&&matchC&&(!S.country||country(ch)===S.country)})}
+function activeList(){const q=txt($("search").value.trim()),f=$("filter").value,cat=S.category;return S.channels.filter(ch=>{const c=classify(ch),matchPackage=!S.packageKey||packageMatch(ch,S.packageKey),matchQ=!q||txt(ch.name+" "+ch.country+" "+ch.group).includes(q),matchF=f==="all"||(f==="favorites"&&S.favorites.has(id(ch)))||(f==="morocco"&&c==="morocco")||(f==="sport"&&c==="sport")||(f==="movies"&&c==="movies"),matchC=cat==="all"||(cat==="favorites"&&S.favorites.has(id(ch)))||c===cat;return matchPackage&&matchQ&&matchF&&matchC&&(!S.country||S.country==="__ALL__"||country(ch)===S.country)})}
 function makeChannel(ch){const el=document.createElement("div");el.className="channel";el.tabIndex=0;const img=document.createElement("img");img.className="logo";img.alt="";img.loading="lazy";if(/^https?:\/\//i.test(ch.logo))img.src=ch.logo;img.onerror=()=>img.removeAttribute("src");const info=document.createElement("div");info.className="channel-info";const name=document.createElement("div");name.className="channel-name";name.textContent=ch.name;const meta=document.createElement("div");meta.className="channel-meta";meta.textContent=[ch.country,ch.group].filter(Boolean).join(" · ")||"IPTV";info.append(name,meta);const star=document.createElement("button");star.className="star";star.title="إضافة أو إزالة من المفضلة";star.textContent=S.favorites.has(id(ch))?"★":"☆";star.addEventListener("click",e=>{e.stopPropagation();const k=id(ch);S.favorites.has(k)?S.favorites.delete(k):S.favorites.add(k);store.set("favorites",[...S.favorites]);render()});el.append(img,info,star);el.addEventListener("click",()=>play(ch));el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();play(ch)}});return el}
 function renderRecent(){const items=S.recent.map(k=>S.channels.find(ch=>id(ch)===k)).filter(Boolean);$("recentSection").classList.toggle("hidden",items.length===0);$("recentList").replaceChildren(...items.map(makeChannel))}
 function render(){const list=activeList(),isCountry=!!S.country||!!S.packageKey;renderRecent();$("countriesView").classList.toggle("hidden",isCountry);$("channelsView").classList.toggle("hidden",!isCountry);$("empty").classList.toggle("hidden",list.length>0||(!S.channels.length));$("summary").textContent=S.channels.length+" قناة";if(isCountry){$("channelCount").textContent=list.length+" قناة";$("channels").replaceChildren(...list.map(makeChannel))}else{const groups=new Map();list.forEach(ch=>{const c=country(ch);if(!groups.has(c))groups.set(c,[]);groups.get(c).push(ch)});const cards=[...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([name,arr])=>{const b=document.createElement("button");b.className="country";const left=document.createElement("span");const strong=document.createElement("strong");strong.textContent=countryFlag(name)+" "+name;const sm=document.createElement("small");sm.textContent=arr.length+" قناة";left.append(strong,sm);const arrow=document.createElement("span");arrow.textContent="‹";b.append(left,arrow);b.addEventListener("click",()=>{S.country=name;$("listTitle").textContent=name;render()});return b});$("countries").replaceChildren(...cards)}}
 function home(){S.packageKey=null;$("packageGrid").querySelectorAll(".package-card").forEach(x=>x.classList.remove("active"));document.querySelector(".package-section").classList.remove("hidden");$("playerPanel").classList.add("hidden");S.country=null;$("listTitle").textContent="اختر باقتك";render()}
 function loadText(raw,label){const parsed=parseM3U(raw);if(!parsed.length){alert("لم يتم العثور على روابط قنوات صالحة في قائمة M3U.");return false}S.channels=parsed;S.country=null;$("listTitle").textContent=translations[S.lang].title;store.set("playlist",S.playlist);$("notice").textContent="تم تحميل "+parsed.length+" قناة من "+label+". تأكد من حقوق استخدام كل رابط.";render();return true}
 async function loadDefault(){
- const url=DEFAULT;
- const controller=new AbortController();
- const timeout=setTimeout(()=>controller.abort(),90000);
- S.channels=[];S.country=null;S.playlist=DEFAULT;store.set("playlist",DEFAULT);
- $("listTitle").textContent=translations[S.lang].title;
- render();
- status("جارٍ تحميل القائمة الأصلية كاملة من المصدر المحدد...");
- try{
-  const response=await fetch(url,{cache:"no-store",signal:controller.signal,mode:"cors"});
-  if(!response.ok)throw new Error("HTTP "+response.status);
-  const raw=await response.text();
-  if(!raw.includes("#EXTM3U"))throw new Error("الاستجابة ليست ملف M3U صالحاً");
-  const parsed=parseM3U(raw);
-  if(!parsed.length)throw new Error("لم يتم العثور على قنوات قابلة للقراءة");
-  const unique=new Map();
-  for(const ch of parsed){if(ch.url&&!unique.has(ch.url))unique.set(ch.url,ch);}
-  S.channels=[...unique.values()];
-  S.country=null;
+ const urls=[...new Set(DEFAULT_PLAYLISTS)];
+ const results=await Promise.allSettled(urls.map(async url=>{
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),45000);
+  try{
+   const response=await fetch(url,{cache:"no-store",mode:"cors",signal:controller.signal});
+   if(!response.ok)throw new Error("HTTP "+response.status);
+   const raw=await response.text();
+   if(!raw.includes("#EXTM3U"))throw new Error("ملف M3U غير صالح");
+   return {url,channels:parseM3U(raw)};
+  }finally{clearTimeout(timeout)}
+ }));
+ const merged=new Map();let ok=0;const failed=[];
+ for(let i=0;i<results.length;i++){
+  const result=results[i];
+  if(result.status!=="fulfilled"){failed.push(urls[i]);continue}
+  ok++;
+  for(const ch of result.value.channels){
+   if(ch.url&&!merged.has(ch.url))merged.set(ch.url,ch);
+  }
+ }
+ if(merged.size){
+  S.channels=[...merged.values()];
+  S.playlist=DEFAULT;store.set("playlist",DEFAULT);
+  S.country="__ALL__";S.packageKey=null;
+  $("package-section")?.classList.add("hidden");
+  $("listTitle").textContent="كل القنوات";
+  $("notice").textContent="تم تحميل "+S.channels.length.toLocaleString()+" قناة من "+ok+" قوائم. قد تتوقف بعض الروابط حسب المصدر أو البلد.";
   render();
-  $("notice").textContent="تم تحميل "+S.channels.length+" قناة من القائمة الأصلية.";
-  status("اكتمل تحميل القائمة الأصلية: "+S.channels.length+" قناة. عدد القنوات يعكس محتوى المصدر وقت التحميل.");
- }catch(error){
-  const message=error.name==="AbortError"?"انتهت مهلة تحميل القائمة بعد 90 ثانية.":"تعذر تحميل القائمة: "+error.message;
-  status(message+" قد يمنع اتصال الشبكة أو المتصفح الوصول إلى المصدر.");
-  $("notice").textContent="لم يكتمل تحميل القائمة الأصلية. تحقق من الاتصال ثم اضغط تحديث لإعادة المحاولة.";
- }finally{clearTimeout(timeout);}
+  status("اكتمل التحميل: "+S.channels.length.toLocaleString()+" قناة من "+ok+" مصادر."+(failed.length?" تعذر الوصول إلى "+failed.length+" مصادر.":""));
+ }else{
+  S.channels=[];render();
+  status("تعذر تحميل قوائم القنوات. تحقق من اتصال الإنترنت أو قيود الوصول إلى المصادر ثم اضغط تحديث.");
+  $("notice").textContent="لم يتمكن التطبيق من قراءة أي قائمة حالياً. يمكنك استيراد ملف M3U من هاتفك.";
+ }
 }
 async function loadUrl(url){
  if(url===DEFAULT){await loadDefault();return;}
@@ -204,10 +213,10 @@ $("addBtn").addEventListener("click",addList);$("fileInput").addEventListener("c
 $("homeBtn").addEventListener("click",()=>{S.packageKey=null;setCategory("all");home()});$("backBtn").addEventListener("click",home);$("reloadBtn").addEventListener("click",()=>loadUrl(S.playlist||DEFAULT));$("search").addEventListener("input",()=>{S.country=null;render()});$("filter").addEventListener("change",()=>setCategory($("filter").value));$("chips").addEventListener("click",e=>{const b=e.target.closest("button[data-cat]");if(b)setCategory(b.dataset.cat)});$("langBtn").addEventListener("click",()=>{S.lang=S.lang==="ar"?"fr":"ar";language()});video.addEventListener("error",()=>status("تعذر تشغيل البث. قد يكون الرابط متوقفاً أو يتطلب صيغة غير مدعومة."));
 document.addEventListener("keydown",e=>{if(e.key==="/"&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){e.preventDefault();$("search").focus();return}if(["ArrowDown","ArrowUp","ArrowLeft","ArrowRight"].includes(e.key)&&! /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){const cards=[...document.querySelectorAll("#channels .channel")];if(!cards.length)return;const current=cards.indexOf(document.activeElement);e.preventDefault();const step=(e.key==="ArrowDown"||e.key==="ArrowRight")?1:-1;cards[(current<0?0:(current+step+cards.length)%cards.length)].focus();}if(e.key==="Escape"&&S.country){home()}});
 function showDashboard(){ $("dashboardView").classList.remove("hidden");$("catalogView").classList.add("hidden");$("mediaPlaceholder").classList.add("hidden");$("notice").classList.add("hidden");$("playerPanel").classList.add("hidden");S.country=null;S.packageKey=null; }
-function showCatalog(){ $("dashboardView").classList.add("hidden");$("catalogView").classList.remove("hidden");$("mediaPlaceholder").classList.add("hidden");$("notice").classList.remove("hidden");$("playerPanel").classList.add("hidden");render(); }
+function showCatalog(){ $("dashboardView").classList.add("hidden");$("catalogView").classList.remove("hidden");$("mediaPlaceholder").classList.add("hidden");$("notice").classList.remove("hidden");$("playerPanel").classList.add("hidden");S.country="__ALL__";S.packageKey=null;document.querySelector(".package-section").classList.add("hidden");$("listTitle").textContent="كل القنوات";render(); }
 function showMedia(title,message){$("dashboardView").classList.add("hidden");$("catalogView").classList.add("hidden");$("mediaPlaceholder").classList.remove("hidden");$("mediaTitle").textContent=title;$("mediaMessage").textContent=message;}
-$("openLive").addEventListener("click",()=>{S.category="all";S.packageKey=null;S.country=null;showCatalog();$("listTitle").textContent="اختر باقتك";$("packageGrid").scrollIntoView({behavior:"smooth",block:"start"});});
-$("headerChannels").addEventListener("click",()=>{S.category="all";S.packageKey=null;S.country=null;showCatalog();$("listTitle").textContent="اختر باقتك";});
+$("openLive").addEventListener("click",()=>{S.category="all";S.packageKey=null;S.country="__ALL__";$("search").value="";showCatalog();$("listTitle").textContent="كل القنوات";$("search").focus({preventScroll:true});});
+$("headerChannels").addEventListener("click",()=>{S.category="all";S.packageKey=null;S.country="__ALL__";$("search").value="";showCatalog();$("listTitle").textContent="كل القنوات";});
 $("packageGrid").addEventListener("click",e=>{const b=e.target.closest("button[data-package]");if(!b)return;const key=b.dataset.package;if(key==="m3u"){addList();return;}if(key==="matches"){showMedia("جدول المباريات","قسم جدول المباريات جاهز للربط بمصدر مواعيد موثوق. لا توجد بيانات مباريات مباشرة مضافة حالياً.");return;}S.packageKey=key;S.category="all";S.country=null;$("search").value="";$("packageGrid").querySelectorAll(".package-card").forEach(x=>x.classList.toggle("active",x===b));document.querySelector(".package-section").classList.add("hidden");$("listTitle").textContent=b.querySelector("strong").textContent;render();const count=activeList().length;status(count?("تم العثور على "+count+" قناة ضمن هذا القسم من قائمتك الحالية."):"لا توجد قنوات بهذا الاسم في قائمة M3U الحالية. يمكنك استيراد قائمة مرخّصة تحتوي على هذا القسم.");});
 $("openMovies").addEventListener("click",()=>showMedia("MOVIES","قسم الأفلام جاهز لاستقبال روابط فيديو مرخّصة. أرسل مصادر الفيديو بعد اكتمال الواجهة لنربطها هنا."));
 $("openSeries").addEventListener("click",()=>showMedia("SERIES","قسم المسلسلات جاهز لاستقبال روابط الحلقات المرخّصة وتنظيم المواسم."));
