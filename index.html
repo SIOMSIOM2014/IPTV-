@@ -46,9 +46,45 @@ main{max-width:1320px;margin:auto;padding:18px}.notice{background:#172342;border
 .secondary{background:#142342;color:#fff;border:1px solid #304568;border-radius:11px;padding:10px 13px}.install-app{display:none!important}
 @media(max-width:700px){.home-screen{min-height:calc(100vh - 75px);justify-content:flex-start;padding-top:12vh}.home-screen .dashboard{grid-template-columns:1fr;gap:12px;margin:12px 0}.home-screen .dash-card{min-height:125px}.home-shortcuts{gap:8px}.home-expiry{font-size:11px}main{padding:10px}.dashboard{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin:15px 0}.dash-card{min-height:145px;padding:13px 8px}.dash-card .dash-icon{font-size:36px}.dash-card strong{font-size:17px}.dash-card small{font-size:10px}.toolbar{grid-template-columns:1fr 1fr}.toolbar input{grid-column:1/-1}.toolbar button{padding:10px 7px}.hero{padding:14px}.hero-icon{font-size:30px}header{height:65px;padding:8px 10px}.brand{font-size:16px}.head-actions{gap:5px}.head-actions button{width:37px;height:37px;font-size:16px}#catalogView{padding:10px}.grid,.channel-list{gap:10px}.country{min-height:115px;padding:10px}.country strong{font-size:15px}.channel{min-height:130px;padding:10px}.logo{width:65px;height:58px;flex-basis:58px}.channel-name{font-size:14px}.player-wrap video{max-height:45vh}}
 @media(min-width:1000px){.dashboard{grid-template-columns:repeat(3,minmax(0,1fr))}.dash-card{min-height:205px}}
-</style></head>
+/* Exact Smart IPTV-inspired home and channel package layout */
+body{background:#050916;color:#f5f7ff}
+header.app-header{height:70px;background:#070d22;border:0;border-bottom:1px solid #202b4b;padding:8px max(14px,calc((100vw - 1320px)/2));justify-content:flex-start;gap:18px}
+.app-header .brand{display:flex;align-items:center;gap:6px;font-size:15px;white-space:nowrap}.brand-mark{font-size:25px;color:#7a6bff}.app-header .brand small{font-size:9px;color:#a9b5d1;margin-inline-start:5px}
+.header-clock{font-size:11px;color:#c6cee0;white-space:nowrap}
+.app-header .head-actions{margin-inline-start:auto;gap:10px}.app-header .head-actions button{background:transparent;border:0;border-radius:8px;width:34px;height:36px;color:#f5f7ff;font-size:22px}.app-header .head-actions button:hover{background:#192344}
+main{max-width:1320px;padding:12px 18px}
+.home-screen{min-height:calc(100vh - 70px);max-width:1320px;justify-content:center;padding:20px 0 12px}
+.home-screen .dashboard{margin:12px 0 18px;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.home-screen .dash-card{height:220px;min-height:220px;border-radius:9px;box-shadow:none;position:relative;justify-content:center;gap:12px}
+.home-screen .dash-live{background:linear-gradient(155deg,#00c995 0%,#079ec3 48%,#3034c7 100%)}
+.home-screen .dash-movies{background:linear-gradient(155deg,#f32350 0%,#f94d23 55%,#ff9d25 100%)}
+.home-screen .dash-series{background:linear-gradient(155deg,#a52bb5 0%,#6854d8 50%,#209bd9 100%)}
+.home-screen .dash-card .dash-icon{font-size:49px}.home-screen .dash-card strong{font-size:20px;letter-spacing:.3px}.home-screen .dash-card small{position:absolute;bottom:0;left:0;right:0;background:#07102755;padding:10px 5px;color:#e9efff;font-size:10px}
+.home-shortcuts{width:min(100%,560px);margin:0 auto 25px;justify-content:flex-start}
+.home-shortcuts button{flex:0 1 180px;min-height:45px;border-radius:4px;background:#4aaf82;font-size:12px}
+.home-expiry{border:0;padding:14px 20px;color:#e8eaf3;font-weight:600}
+.home-expiry span:last-child{color:#bbc6dd}
+#catalogView{background:#38b8dc;border-radius:0;padding:15px;color:#202b39;min-height:calc(100vh - 90px)}
+#catalogView .section-head h2{color:#19364a}
+.package-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin:12px auto 18px;max-width:1000px}
+.package-card{min-height:164px;border-radius:18px;background:#fff;color:#30343a;box-shadow:0 4px 7px #1454;padding:12px 9px;gap:7px}
+.package-card .package-icon{font-size:48px;line-height:1.1}.package-card strong{font-size:20px}.package-card small{display:none}
+.channel-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.channel{min-height:155px;border-radius:17px;background:#fff;color:#292f39}
+.player-wrap{margin:12px auto 17px;max-width:1000px}
+@media(max-width:700px){
+ header.app-header{height:58px;padding:6px 8px;gap:7px}.app-header .brand{font-size:11px}.app-header .brand small,.header-clock{display:none}.app-header .head-actions{gap:2px}.app-header .head-actions button{width:31px;height:34px;font-size:19px}
+ main{padding:8px}.home-screen{min-height:calc(100vh - 60px);padding:12vh 0 10px;justify-content:flex-start}
+ .home-screen .dashboard{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 15px}
+ .home-screen .dash-card{height:145px;min-height:145px;padding:8px 3px;gap:7px}
+ .home-screen .dash-card .dash-icon{font-size:31px}.home-screen .dash-card strong{font-size:12px}.home-screen .dash-card small{font-size:8px;padding:7px 2px}
+ .home-shortcuts{gap:8px;margin-bottom:15px}.home-shortcuts button{min-height:40px;font-size:10px;padding:5px}
+ .home-expiry{padding:12px 5px;font-size:10px}
+ #catalogView{padding:10px;border-radius:0}.package-grid{gap:10px}.package-card{min-height:130px;padding:9px 5px;border-radius:15px}.package-card .package-icon{font-size:39px}.package-card strong{font-size:15px}
+ .channel-list{gap:10px}.channel{min-height:132px;padding:9px}.logo{width:67px;height:60px;flex-basis:60px}.channel-name{font-size:14px}
+}</style></head>
 <body>
-<header><div class="brand">⚽ <b>FREE IPTV WORLD</b> 🌍</div><div class="head-actions"><button title="مشاركة" type="button" onclick="if(navigator.share)navigator.share({title:'FREE IPTV WORLD',url:location.href});else alert('انسخ رابط التطبيق للمشاركة')">●</button><button title="البريد" type="button" onclick="location.href='mailto:'">✉</button><button title="واتساب" type="button" onclick="window.open('https://wa.me/?text='+encodeURIComponent(location.href),'_blank')">☏</button><button title="الإشعارات" type="button" onclick="alert('لا توجد إشعارات جديدة')">♟</button><button class="secondary" id="homeBtn">الرئيسية</button><button class="secondary" id="langBtn">FR</button></div></header>
+<header class="app-header"><div class="brand"><span class="brand-mark">◉</span><span><b>FREE IPTV</b> WORLD</span><small>LIVE TV</small></div><div class="header-clock">04:06 PM&nbsp;&nbsp; <span id="headerDate">NOV 24, 2026</span></div><div class="head-actions"><button title="بحث" type="button" onclick="document.getElementById('search').focus()">⌕</button><button title="قائمة القنوات" type="button" id="headerChannels">▣</button><button title="الإشعارات" type="button" onclick="alert('لا توجد إشعارات جديدة')">♟</button><button title="الإعدادات" type="button" id="langBtn">⚙</button><button title="الرئيسية" type="button" id="homeBtn">⌂</button></div></header>
 <main>
 <div class="notice hidden" id="notice">استخدم قوائم وروابط البث التي تملك حق استخدامها. قد تختلف إمكانية التشغيل حسب المصدر والمتصفح.</div>
 <section id="dashboardView" class="home-screen">
