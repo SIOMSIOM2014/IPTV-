@@ -21,7 +21,7 @@ public class MainActivity extends Activity {
   private WebView webView;
   private ProgressBar progress;
   private TextView errorView;
-  private static final String PLAYER_URL = "https://siomsiom2014.github.io/IPTV-/player.html";
+  private static final String PLAYER_URL = "https://siomsiom2014.github.io/IPTV-/?app=android";
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
