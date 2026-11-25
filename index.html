@@ -42,7 +42,8 @@ main{max-width:1320px;margin:auto;padding:18px}.notice{background:#172342;border
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.country{min-height:135px;display:flex;align-items:center;justify-content:center;gap:8px;text-align:center;background:#fff;border:0;border-radius:17px;padding:15px;color:#26313e;box-shadow:0 4px 7px #1235;flex-direction:column}.country strong{font-size:18px}.country small{display:block;color:#647382;margin-top:4px}.country>span:last-child{display:none}
 .channel-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.channel{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;text-align:center;background:#fff;border:0;border-radius:16px;padding:15px;min-width:0;min-height:145px;color:#252f3c;box-shadow:0 4px 8px #1234;cursor:pointer;transition:.15s}.channel:hover{transform:translateY(-2px);box-shadow:0 7px 13px #1235}.logo{width:82px;height:72px;flex:0 0 72px;border-radius:10px;background:#f4f7fb;object-fit:contain;padding:4px}.channel-info{min-width:0;max-width:100%}.channel-name{font-weight:800;font-size:16px;overflow-wrap:anywhere}.channel-meta{color:#657789;font-size:11px;margin-top:4px;overflow-wrap:anywhere}.star{background:transparent;color:#e0a500;padding:2px 5px;font-size:20px;min-width:30px}
 .player-wrap{background:#05080d;border:2px solid #eaf7ff;border-radius:15px;overflow:hidden;margin:12px 0 17px;box-shadow:0 10px 26px #0004}.player-head{padding:10px 13px;background:#101a31;display:flex;justify-content:space-between;align-items:center;gap:8px;color:#fff}.now-title{font-weight:800;overflow-wrap:anywhere}.live-dot{color:#ff7770;font-size:12px;white-space:nowrap}.player-wrap video{display:block;width:100%;aspect-ratio:16/9;max-height:65vh;background:#000;object-fit:contain}.player-status{padding:10px 13px;background:#101a29;color:#b7c7dc;font-size:13px;line-height:1.5}
-.recent-wrap{margin:15px 0 18px}.recent-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.recent-head h2{font-size:17px;margin:0}.recent-list{display:flex;gap:9px;overflow-x:auto;padding:2px 1px 8px}.recent-list .channel{min-width:160px;max-width:190px}.empty{padding:28px 12px;text-align:center;color:#536c7b;background:#fff;border:1px dashed #a6dce9;border-radius:14px}.hidden{display:none!important}.footer{text-align:center;color:#aebbd0;font-size:12px;border-top:1px solid #273454;padding:22px 10px;margin-top:28px}.footer a{color:#9ddcf1}
+.recent-wrap{margin:15px 0 18px}.recent-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.recent-head h2{font-size:17px;margin:0}.recent-list{display:flex;gap:9px;overflow-x:auto;padding:2px 1px 8px}.recent-list .channel{min-width:160px;max-width:190px}.channel-loading{display:flex;align-items:center;justify-content:center;gap:13px;margin:12px 0 16px;padding:17px 14px;background:#eafaff;border:1px solid #b8e8f3;border-radius:13px;color:#16465d;text-align:right}.channel-loading strong{display:block;font-size:15px}.channel-loading small{display:block;margin-top:5px;color:#426b7d;font-size:12px}.loading-spinner{width:30px;height:30px;flex:0 0 30px;border:4px solid #b8e8f3;border-top-color:#087da8;border-radius:50%;animation:channelSpin .8s linear infinite}@keyframes channelSpin{to{transform:rotate(360deg)}}
+.empty{padding:28px 12px;text-align:center;color:#536c7b;background:#fff;border:1px dashed #a6dce9;border-radius:14px}.hidden{display:none!important}.footer{text-align:center;color:#aebbd0;font-size:12px;border-top:1px solid #273454;padding:22px 10px;margin-top:28px}.footer a{color:#9ddcf1}
 .secondary{background:#142342;color:#fff;border:1px solid #304568;border-radius:11px;padding:10px 13px}.install-app{display:none!important}
 @media(max-width:700px){.home-screen{min-height:calc(100vh - 75px);justify-content:flex-start;padding-top:12vh}.home-screen .dashboard{grid-template-columns:1fr;gap:12px;margin:12px 0}.home-screen .dash-card{min-height:125px}.home-shortcuts{gap:8px}.home-expiry{font-size:11px}main{padding:10px}.dashboard{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin:15px 0}.dash-card{min-height:145px;padding:13px 8px}.dash-card .dash-icon{font-size:36px}.dash-card strong{font-size:17px}.dash-card small{font-size:10px}.toolbar{grid-template-columns:1fr 1fr}.toolbar input{grid-column:1/-1}.toolbar button{padding:10px 7px}.hero{padding:14px}.hero-icon{font-size:30px}header{height:65px;padding:8px 10px}.brand{font-size:16px}.head-actions{gap:5px}.head-actions button{width:37px;height:37px;font-size:16px}#catalogView{padding:10px}.grid,.channel-list{gap:10px}.country{min-height:115px;padding:10px}.country strong{font-size:15px}.channel{min-height:130px;padding:10px}.logo{width:65px;height:58px;flex-basis:58px}.channel-name{font-size:14px}.player-wrap video{max-height:45vh}}
 @media(min-width:1000px){.dashboard{grid-template-columns:repeat(3,minmax(0,1fr))}.dash-card{min-height:205px}}
@@ -101,6 +102,7 @@ main{max-width:1320px;padding:12px 18px}
 </section>
 <section id="catalogView" class="hidden">
 <div class="section-head"><h2 id="listTitle">باقات القنوات</h2><span class="muted" id="summary">جارٍ تحميل القائمة...</span></div>
+<div id="channelLoading" class="channel-loading hidden" role="status" aria-live="polite"><span class="loading-spinner" aria-hidden="true"></span><span><strong>جارٍ البحث عن القنوات...</strong><small>يتم الاتصال بقائمة IPTV واستخراج القنوات، يرجى الانتظار.</small></span></div>
 <section class="package-section"><div class="section-head"><h2>الباقات والأقسام</h2><span class="muted">اختر القسم لعرض القنوات المتاحة</span></div><div class="package-grid" id="packageGrid">
 <button class="package-card" data-package="beinhd"><span class="package-icon">📡</span><strong>Bein Sport HD</strong><small>قنوات رياضية عالية الجودة المتاحة في القائمة</small></button>
 <button class="package-card" data-package="beinsd"><span class="package-icon">⚽</span><strong>Bein Sport SD</strong><small>قنوات رياضية بجودة قياسية عند توفرها</small></button>
@@ -156,43 +158,61 @@ function renderRecent(){const items=S.recent.map(k=>S.channels.find(ch=>id(ch)==
 function render(){const list=activeList(),isCountry=!!S.country||!!S.packageKey;renderRecent();$("countriesView").classList.toggle("hidden",isCountry);$("channelsView").classList.toggle("hidden",!isCountry);$("empty").classList.toggle("hidden",list.length>0||(!S.channels.length));$("summary").textContent=S.channels.length+" قناة";if(isCountry){$("channelCount").textContent=list.length+" قناة";$("channels").replaceChildren(...list.map(makeChannel))}else{const groups=new Map();list.forEach(ch=>{const c=country(ch);if(!groups.has(c))groups.set(c,[]);groups.get(c).push(ch)});const cards=[...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([name,arr])=>{const b=document.createElement("button");b.className="country";const left=document.createElement("span");const strong=document.createElement("strong");strong.textContent=countryFlag(name)+" "+name;const sm=document.createElement("small");sm.textContent=arr.length+" قناة";left.append(strong,sm);const arrow=document.createElement("span");arrow.textContent="‹";b.append(left,arrow);b.addEventListener("click",()=>{S.country=name;$("listTitle").textContent=name;render()});return b});$("countries").replaceChildren(...cards)}}
 function home(){S.packageKey=null;$("packageGrid").querySelectorAll(".package-card").forEach(x=>x.classList.remove("active"));document.querySelector(".package-section").classList.remove("hidden");$("playerPanel").classList.add("hidden");S.country=null;$("listTitle").textContent="اختر باقتك";render()}
 function loadText(raw,label){const parsed=parseM3U(raw);if(!parsed.length){alert("لم يتم العثور على روابط قنوات صالحة في قائمة M3U.");return false}S.channels=parsed;S.country=null;$("listTitle").textContent=translations[S.lang].title;store.set("playlist",S.playlist);$("notice").textContent="تم تحميل "+parsed.length+" قناة من "+label+". تأكد من حقوق استخدام كل رابط.";render();return true}
+let channelsLoading=false;
+function setChannelLoading(show){
+ const el=$("channelLoading");
+ if(!el)return;
+ el.classList.toggle("hidden",!show);
+ if(show)el.querySelector("strong").textContent="جارٍ البحث عن القنوات...";
+}
 async function loadDefault(){
- const urls=[...new Set(DEFAULT_PLAYLISTS)];
- const results=await Promise.allSettled(urls.map(async url=>{
-  const controller=new AbortController();
-  const timeout=setTimeout(()=>controller.abort(),45000);
-  try{
-   const response=await fetch(url,{cache:"no-store",mode:"cors",signal:controller.signal});
-   if(!response.ok)throw new Error("HTTP "+response.status);
-   const raw=await response.text();
-   if(!raw.includes("#EXTM3U"))throw new Error("ملف M3U غير صالح");
-   return {url,channels:parseM3U(raw)};
-  }finally{clearTimeout(timeout)}
- }));
- const merged=new Map();let ok=0;const failed=[];
- for(let i=0;i<results.length;i++){
-  const result=results[i];
-  if(result.status!=="fulfilled"){failed.push(urls[i]);continue}
-  ok++;
-  for(const ch of result.value.channels){
-   const meta=[ch.name,ch.group,ch.id].join(" ");
-   if(/\b(adult|xxx|porn|erotic|18\s*\+)\b|للكبار|إباحي|اباحي/i.test(meta))continue;
-   if(ch.url&&!merged.has(ch.url))merged.set(ch.url,ch);
+ if(channelsLoading)return;
+ channelsLoading=true;
+ setChannelLoading(true);
+ try{
+  const urls=[...new Set(DEFAULT_PLAYLISTS)];
+  const results=await Promise.allSettled(urls.map(async url=>{
+   const controller=new AbortController();
+   const timeout=setTimeout(()=>controller.abort(),45000);
+   try{
+    const response=await fetch(url,{cache:"no-store",mode:"cors",signal:controller.signal});
+    if(!response.ok)throw new Error("HTTP "+response.status);
+    const raw=await response.text();
+    if(!raw.includes("#EXTM3U"))throw new Error("ملف M3U غير صالح");
+    return {url,channels:parseM3U(raw)};
+   }finally{clearTimeout(timeout)}
+  }));
+  const merged=new Map();let ok=0;const failed=[];
+  for(let i=0;i<results.length;i++){
+   const result=results[i];
+   if(result.status!=="fulfilled"){failed.push(urls[i]);continue}
+   ok++;
+   for(const ch of result.value.channels){
+    const meta=[ch.name,ch.group,ch.id].join(" ");
+    if(/\\b(adult|xxx|porn|erotic|18\\s*\\+)\\b|للكبار|إباحي|اباحي/i.test(meta))continue;
+    if(ch.url&&!merged.has(ch.url))merged.set(ch.url,ch);
+   }
   }
- }
- if(merged.size){
-  S.channels=[...merged.values()];
-  S.playlist=DEFAULT;store.set("playlist",DEFAULT);
-  S.country="__ALL__";S.packageKey=null;
-  document.querySelector(".package-section")?.classList.add("hidden");
-  $("listTitle").textContent="كل القنوات";
-  $("notice").textContent="تم تحميل "+S.channels.length.toLocaleString()+" قناة من "+ok+" قوائم. قد تتوقف بعض الروابط حسب المصدر أو البلد.";
-  render();
-  status("اكتمل التحميل: "+S.channels.length.toLocaleString()+" قناة من "+ok+" مصادر."+(failed.length?" تعذر الوصول إلى "+failed.length+" مصادر.":""));
- }else{
-  S.channels=[];render();
-  status("تعذر تحميل قوائم القنوات. تحقق من اتصال الإنترنت أو قيود الوصول إلى المصادر ثم اضغط تحديث.");
-  $("notice").textContent="لم يتمكن التطبيق من قراءة أي قائمة حالياً. يمكنك استيراد ملف M3U من هاتفك.";
+  if(merged.size){
+   S.channels=[...merged.values()];
+   S.playlist=DEFAULT;store.set("playlist",DEFAULT);
+   S.country="__ALL__";S.packageKey=null;
+   document.querySelector(".package-section")?.classList.add("hidden");
+   $("listTitle").textContent="كل القنوات";
+   $("notice").textContent="تم تحميل "+S.channels.length.toLocaleString()+" قناة من "+ok+" قوائم. قد تتوقف بعض الروابط حسب المصدر أو البلد.";
+   render();
+   status("اكتمل التحميل: "+S.channels.length.toLocaleString()+" قناة من "+ok+" مصادر."+(failed.length?" تعذر الوصول إلى "+failed.length+" مصادر.":""));
+  }else{
+   S.channels=[];render();
+   status("تعذر تحميل قوائم القنوات. تحقق من اتصال الإنترنت أو قيود الوصول إلى المصادر ثم اضغط تحديث.");
+   $("notice").textContent="لم يتمكن التطبيق من قراءة أي قائمة حالياً. يمكنك استيراد ملف M3U من هاتفك.";
+  }
+ }catch(error){
+  status("تعذر البحث عن القنوات حالياً. تحقق من اتصال الإنترنت ثم حاول مرة أخرى.");
+  $("notice").textContent="تعذر الوصول إلى قائمة القنوات. قد تكون هناك مشكلة اتصال أو قيود من مصدر القائمة.";
+ }finally{
+  channelsLoading=false;
+  setChannelLoading(false);
  }
 }
 async function loadUrl(url){
@@ -209,10 +229,10 @@ $("addBtn").addEventListener("click",addList);$("fileInput").addEventListener("c
 $("homeBtn").addEventListener("click",()=>{S.packageKey=null;setCategory("all");home()});$("backBtn").addEventListener("click",home);$("reloadBtn").addEventListener("click",()=>loadUrl(S.playlist||DEFAULT));$("search").addEventListener("input",()=>{S.country=null;render()});$("filter").addEventListener("change",()=>setCategory($("filter").value));$("chips").addEventListener("click",e=>{const b=e.target.closest("button[data-cat]");if(b)setCategory(b.dataset.cat)});$("langBtn").addEventListener("click",()=>{S.lang=S.lang==="ar"?"fr":"ar";language()});video.addEventListener("error",()=>status("تعذر تشغيل البث. قد يكون الرابط متوقفاً أو يتطلب صيغة غير مدعومة."));
 document.addEventListener("keydown",e=>{if(e.key==="/"&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){e.preventDefault();$("search").focus();return}if(["ArrowDown","ArrowUp","ArrowLeft","ArrowRight"].includes(e.key)&&! /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){const cards=[...document.querySelectorAll("#channels .channel")];if(!cards.length)return;const current=cards.indexOf(document.activeElement);e.preventDefault();const step=(e.key==="ArrowDown"||e.key==="ArrowRight")?1:-1;cards[(current<0?0:(current+step+cards.length)%cards.length)].focus();}if(e.key==="Escape"&&S.country){home()}});
 function showDashboard(){ $("dashboardView").classList.remove("hidden");$("catalogView").classList.add("hidden");$("mediaPlaceholder").classList.add("hidden");$("notice").classList.add("hidden");$("playerPanel").classList.add("hidden");S.country=null;S.packageKey=null; }
-function showCatalog(){ $("dashboardView").classList.add("hidden");$("catalogView").classList.remove("hidden");$("mediaPlaceholder").classList.add("hidden");$("notice").classList.remove("hidden");$("playerPanel").classList.add("hidden");S.country="__ALL__";S.packageKey=null;document.querySelector(".package-section").classList.add("hidden");$("listTitle").textContent="كل القنوات";render(); }
+function showCatalog(){ $("dashboardView").classList.add("hidden");$("catalogView").classList.remove("hidden");$("mediaPlaceholder").classList.add("hidden");$("notice").classList.remove("hidden");$("playerPanel").classList.add("hidden");S.country="__ALL__";S.packageKey=null;document.querySelector(".package-section").classList.add("hidden");$("listTitle").textContent="كل القنوات";setChannelLoading(channelsLoading);render(); }
 function showMedia(title,message){$("dashboardView").classList.add("hidden");$("catalogView").classList.add("hidden");$("mediaPlaceholder").classList.remove("hidden");$("mediaTitle").textContent=title;$("mediaMessage").textContent=message;}
-$("openLive").addEventListener("click",()=>{S.category="all";S.packageKey=null;S.country="__ALL__";$("search").value="";showCatalog();$("listTitle").textContent="كل القنوات";$("search").focus({preventScroll:true});});
-$("headerChannels").addEventListener("click",()=>{S.category="all";S.packageKey=null;S.country="__ALL__";$("search").value="";showCatalog();$("listTitle").textContent="كل القنوات";});
+$("openLive").addEventListener("click",()=>{S.category="all";S.packageKey=null;S.country="__ALL__";$("search").value="";showCatalog();$("listTitle").textContent="كل القنوات";$("search").focus({preventScroll:true});loadDefault();});
+$("headerChannels").addEventListener("click",()=>{S.category="all";S.packageKey=null;S.country="__ALL__";$("search").value="";showCatalog();$("listTitle").textContent="كل القنوات";loadDefault();});
 $("packageGrid").addEventListener("click",e=>{const b=e.target.closest("button[data-package]");if(!b)return;const key=b.dataset.package;if(key==="m3u"){addList();return;}if(key==="matches"){showMedia("جدول المباريات","قسم جدول المباريات جاهز للربط بمصدر مواعيد موثوق. لا توجد بيانات مباريات مباشرة مضافة حالياً.");return;}S.packageKey=key;S.category="all";S.country=null;$("search").value="";$("packageGrid").querySelectorAll(".package-card").forEach(x=>x.classList.toggle("active",x===b));document.querySelector(".package-section").classList.add("hidden");$("listTitle").textContent=b.querySelector("strong").textContent;render();const count=activeList().length;status(count?("تم العثور على "+count+" قناة ضمن هذا القسم من قائمتك الحالية."):"لا توجد قنوات بهذا الاسم في قائمة M3U الحالية. يمكنك استيراد قائمة مرخّصة تحتوي على هذا القسم.");});
 $("openMovies").addEventListener("click",()=>showMedia("MOVIES","قسم الأفلام جاهز لاستقبال روابط فيديو مرخّصة. أرسل مصادر الفيديو بعد اكتمال الواجهة لنربطها هنا."));
 $("openSeries").addEventListener("click",()=>showMedia("SERIES","قسم المسلسلات جاهز لاستقبال روابط الحلقات المرخّصة وتنظيم المواسم."));
