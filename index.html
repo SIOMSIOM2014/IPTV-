@@ -19,13 +19,15 @@
 <meta name="twitter:description" content="مشغل ويب عربي وفرنسي لقوائم M3U المصرح بها.">
 <link rel="canonical" href="https://siomsiom2014.github.io/IPTV-/">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"FREE IPTV WORLD 🌍","alternateName":"FREE IPTV WORLD 🌍","url":"https://siomsiom2014.github.io/IPTV-/","description":"مشغل ويب عربي وفرنسي لقوائم M3U المصرح باستخدامها، مع البحث والتصنيفات ومشغل فيديو مدمج.","applicationCategory":"MultimediaApplication","operatingSystem":"Any","inLanguage":["ar","fr"],"browserRequirements":"Requires a modern browser with HTML5 video support.","sameAs":["https://github.com/SIOMSIOM2014/IPTV-"]}</script>
-<link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
-<link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="FREE IPTV WORLD 🌍">
 <title>FREE IPTV WORLD 🌍 | مشغل قوائم M3U</title>
+<script>
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(reg=>reg.unregister())).catch(()=>{});
+}
+if("caches" in window){
+ caches.keys().then(keys=>keys.filter(key=>key.startsWith("iptv-world-")).forEach(key=>caches.delete(key))).catch(()=>{});
+}
+</script>
 <style>
 :root{color-scheme:dark;--navy:#080d20;--panel:#111a35;--muted:#aab6cc;--blue:#35b9df;--red:#ef5350;--line:#273454}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#080d20;color:#f6f8ff;font-family:Arial,Tahoma,sans-serif;min-height:100vh}button,input,select{font:inherit}button{cursor:pointer}
@@ -129,7 +131,6 @@ main{max-width:1320px;padding:12px 18px}
 <section id="mediaPlaceholder" class="hidden"><div class="hero"><div><h1 id="mediaTitle">الأفلام والمسلسلات</h1><p id="mediaMessage">أضف روابط الفيديو التي تملك حق استخدامها لاحقاً، وسيتم تنظيمها هنا.</p></div><div class="hero-icon">🎞️</div></div><button class="secondary" id="mediaBack">العودة للرئيسية</button></section>
 </main>
 <input id="fileInput" type="file" accept=".m3u,.m3u8,text/plain" class="hidden">
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
 <script>
 (()=>{"use strict";
 const LEGACY_DEFAULT="https://iptv-org.github.io/iptv/index.country.m3u";
@@ -150,7 +151,43 @@ function countryLabel(value){const code=countryCode(value);if(!code)return value
 function country(ch){const value=String(ch.country||ch.group||"").trim();return countryLabel(value)||"غير مصنف"}
 function status(t){$("status").textContent=t}
 function stop(){if(S.hls){S.hls.destroy();S.hls=null}video.pause();video.removeAttribute("src");video.load()}
-function play(ch){stop();$("playerPanel").classList.remove("hidden");S.recent=[id(ch),...S.recent.filter(x=>x!==id(ch))].slice(0,12);store.set("recent",S.recent);renderRecent();$("nowTitle").textContent=ch.name;status("محاولة تشغيل: "+ch.name+" — إذا لم يبدأ البث فقد يكون المصدر غير متاح أو غير متوافق.");if(window.Hls&&Hls.isSupported()&&/\.m3u8(?:$|\?)/i.test(ch.url)){S.hls=new Hls({enableWorker:true,lowLatencyMode:false,capLevelToPlayerSize:true,startLevel:0,abrEwmaDefaultEstimate:350000,maxBufferLength:12,backBufferLength:20});S.hls.loadSource(ch.url);S.hls.attachMedia(video);S.hls.on(Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>status("اضغط زر التشغيل داخل المشغّل.")));S.hls.on(Hls.Events.ERROR,(_,d)=>{if(d.fatal)status("تعذر تشغيل البث. تحقق من الرابط أو جرّب قناة أخرى؛ قد تمنع قيود CORS تشغيله.")})}else{video.src=ch.url;video.play().catch(()=>status("اضغط تشغيل. إذا لم يعمل الرابط فقد لا يدعم المتصفح صيغة البث."))}if(innerWidth<800)document.querySelector(".player-wrap").scrollIntoView({behavior:"smooth",block:"start"})}
+function loadHlsLibrary(){
+ return new Promise(resolve=>{
+  if(window.Hls)return resolve(true);
+  const script=document.createElement("script");
+  script.src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js";
+  script.onload=()=>resolve(!!window.Hls);
+  script.onerror=()=>resolve(false);
+  document.head.appendChild(script);
+ });
+}
+async function play(ch){
+ stop();
+ $("playerPanel").classList.remove("hidden");
+ S.recent=[id(ch),...S.recent.filter(x=>x!==id(ch))].slice(0,12);
+ store.set("recent",S.recent);
+ renderRecent();
+ $("nowTitle").textContent=ch.name;
+ status("محاولة تشغيل: "+ch.name);
+ const isHls=/\\.m3u8(?:$|\\?)/i.test(ch.url);
+ if(isHls&&!video.canPlayType("application/vnd.apple.mpegurl")){
+  const loaded=await loadHlsLibrary();
+  if(loaded&&window.Hls&&Hls.isSupported()){
+   S.hls=new Hls({enableWorker:true,lowLatencyMode:false,capLevelToPlayerSize:true,startLevel:0,maxBufferLength:12,backBufferLength:20});
+   S.hls.loadSource(ch.url);
+   S.hls.attachMedia(video);
+   S.hls.on(Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>status("اضغط زر التشغيل داخل المشغّل.")));
+   S.hls.on(Hls.Events.ERROR,(_,d)=>{if(d.fatal)status("تعذر تشغيل هذا البث؛ جرّب قناة أخرى أو تحقق من المصدر.")});
+  }else{
+   video.src=ch.url;
+   video.play().catch(()=>status("هذا المتصفح لا يدعم صيغة البث لهذا الرابط."));
+  }
+ }else{
+  video.src=ch.url;
+  video.play().catch(()=>status("اضغط زر التشغيل. قد لا يدعم المتصفح صيغة هذا الرابط."));
+ }
+ if(innerWidth<800)document.querySelector(".player-wrap").scrollIntoView({behavior:"smooth",block:"start"});
+}
 function packageMatch(ch,key){const s=txt([ch.name,ch.group,ch.country,ch.id].join(" "));const rules={beinhd:/bein.*(hd)|\bhd\b.*bein/,beinsd:/bein.*(sd)|\bsd\b.*bein/,abudhabi:/abu.?dhabi|أبوظبي|ابوظبي/,sports:/sport|sports|football|soccer|رياضة|رياضية|كرة/,beinmovies:/bein.*(movie|film|series)|movie|movies|series|مسلسل|أفلام/,action:/action|cinema action|أكشن|اكشن/,arabic:/arab|العربية|عربي|arabic|international|دولي/,osn:/\bosn\b/,alfajer:/al.?fajer|الفجر/,quran:/quran|قرآن|القرآن|koran/};return key==="matches"||key==="m3u"||!key?false:(rules[key]||/\u0000/).test(s)}
 function activeList(){const q=txt($("search").value.trim()),f=$("filter").value,cat=S.category;return S.channels.filter(ch=>{const c=classify(ch),matchPackage=!S.packageKey||packageMatch(ch,S.packageKey),matchQ=!q||txt(ch.name+" "+ch.country+" "+ch.group).includes(q),matchF=f==="all"||(f==="favorites"&&S.favorites.has(id(ch)))||(f==="morocco"&&c==="morocco")||(f==="sport"&&c==="sport")||(f==="movies"&&c==="movies"),matchC=cat==="all"||(cat==="favorites"&&S.favorites.has(id(ch)))||c===cat;return matchPackage&&matchQ&&matchF&&matchC&&(!S.country||S.country==="__ALL__"||country(ch)===S.country)})}
 function makeChannel(ch){const el=document.createElement("div");el.className="channel";el.tabIndex=0;const img=document.createElement("img");img.className="logo";img.alt="";img.loading="lazy";if(/^https?:\/\//i.test(ch.logo))img.src=ch.logo;img.onerror=()=>img.removeAttribute("src");const info=document.createElement("div");info.className="channel-info";const name=document.createElement("div");name.className="channel-name";name.textContent=ch.name;const meta=document.createElement("div");meta.className="channel-meta";meta.textContent=[ch.country,ch.group].filter(Boolean).join(" · ")||"IPTV";info.append(name,meta);const star=document.createElement("button");star.className="star";star.title="إضافة أو إزالة من المفضلة";star.textContent=S.favorites.has(id(ch))?"★":"☆";star.addEventListener("click",e=>{e.stopPropagation();const k=id(ch);S.favorites.has(k)?S.favorites.delete(k):S.favorites.add(k);store.set("favorites",[...S.favorites]);render()});el.append(img,info,star);el.addEventListener("click",()=>play(ch));el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();play(ch)}});return el}
@@ -169,47 +206,50 @@ async function loadDefault(){
  if(channelsLoading)return;
  channelsLoading=true;
  setChannelLoading(true);
+ const urls=[...new Set(DEFAULT_PLAYLISTS)];
+ let loaded=null,failed=[];
  try{
-  const urls=[...new Set(DEFAULT_PLAYLISTS)];
-  const results=await Promise.allSettled(urls.map(async url=>{
-   const controller=new AbortController();
-   const timeout=setTimeout(()=>controller.abort(),45000);
+  for(const url of urls){
    try{
-    const response=await fetch(url,{cache:"no-store",mode:"cors",signal:controller.signal});
+    const controller=typeof AbortController!=="undefined"?new AbortController():null;
+    const timer=controller?setTimeout(()=>controller.abort(),15000):null;
+    let response;
+    try{response=await fetch(url,{cache:"no-store",mode:"cors",...(controller?{signal:controller.signal}:{})});}
+    finally{if(timer)clearTimeout(timer);}
     if(!response.ok)throw new Error("HTTP "+response.status);
     const raw=await response.text();
     if(!raw.includes("#EXTM3U"))throw new Error("ملف M3U غير صالح");
-    return {url,channels:parseM3U(raw)};
-   }finally{clearTimeout(timeout)}
-  }));
-  const merged=new Map();let ok=0;const failed=[];
-  for(let i=0;i<results.length;i++){
-   const result=results[i];
-   if(result.status!=="fulfilled"){failed.push(urls[i]);continue}
-   ok++;
-   for(const ch of result.value.channels){
-    const meta=[ch.name,ch.group,ch.id].join(" ");
-    if(/\b(adult|xxx|porn|erotic|18\s*\+)\b|للكبار|إباحي|اباحي/i.test(meta))continue;
-    if(ch.url&&!merged.has(ch.url))merged.set(ch.url,ch);
-   }
+    const channels=parseM3U(raw);
+    if(!channels.length)throw new Error("القائمة لا تحتوي على قنوات قابلة للقراءة");
+    loaded={url,channels};
+    break;
+   }catch(error){failed.push(url);}
   }
-  if(merged.size){
-   S.channels=[...merged.values()];
-   S.playlist=DEFAULT;store.set("playlist",DEFAULT);
-   S.country="__ALL__";S.packageKey=null;
+  if(loaded){
+   const unique=new Map();
+   for(const ch of loaded.channels){
+    const meta=[ch.name,ch.group,ch.id].join(" ");
+    if(/\\b(adult|xxx|porn|erotic|18\\s*\\+)\\b|للكبار|إباحي|اباحي/i.test(meta))continue;
+    if(ch.url&&!unique.has(ch.url))unique.set(ch.url,ch);
+   }
+   S.channels=[...unique.values()];
+   S.playlist=DEFAULT;
+   store.set("playlist",DEFAULT);
+   S.country="__ALL__";
+   S.packageKey=null;
    document.querySelector(".package-section")?.classList.add("hidden");
    $("listTitle").textContent="كل القنوات";
-   $("notice").textContent="تم تحميل "+S.channels.length.toLocaleString()+" قناة من "+ok+" قوائم. قد تتوقف بعض الروابط حسب المصدر أو البلد.";
+   $("notice").textContent="تم تحميل "+S.channels.length.toLocaleString()+" قناة. قد تختلف إمكانية تشغيل بعض الروابط حسب المصدر والمتصفح.";
    render();
-   status("اكتمل التحميل: "+S.channels.length.toLocaleString()+" قناة من "+ok+" مصادر."+(failed.length?" تعذر الوصول إلى "+failed.length+" مصادر.":""));
+   status("اكتمل تحميل "+S.channels.length.toLocaleString()+" قناة.");
   }else{
-   S.channels=[];render();
-   status("تعذر تحميل قوائم القنوات. تحقق من اتصال الإنترنت أو قيود الوصول إلى المصادر ثم اضغط تحديث.");
-   $("notice").textContent="لم يتمكن التطبيق من قراءة أي قائمة حالياً. يمكنك استيراد ملف M3U من هاتفك.";
+   S.channels=[];
+   render();
+   status("لم نتمكن من تحميل القائمة من المصدرين. تحقق من الإنترنت ثم اضغط تحديث.");
+   $("notice").textContent="تعذر الوصول إلى قائمة القنوات. يمكنك تجربة ملف M3U محلي من جهازك.";
   }
  }catch(error){
-  status("تعذر البحث عن القنوات حالياً. تحقق من اتصال الإنترنت ثم حاول مرة أخرى.");
-  $("notice").textContent="تعذر الوصول إلى قائمة القنوات. قد تكون هناك مشكلة اتصال أو قيود من مصدر القائمة.";
+  status("حدث خطأ أثناء تحميل القنوات. اضغط تحديث للمحاولة مرة أخرى.");
  }finally{
   channelsLoading=false;
   setChannelLoading(false);
@@ -241,20 +281,8 @@ $("openFav").addEventListener("click",()=>{S.category="favorites";S.country=null
 $("addListShortcut").addEventListener("click",addList);
 $("mediaBack").addEventListener("click",showDashboard);
 $("homeBtn").addEventListener("click",showDashboard);
-language();render();showDashboard();loadUrl(DEFAULT);setInterval(()=>{if(document.visibilityState==="visible"&&S.playlist===DEFAULT)loadDefault()},6*60*60*1000);
-if("serviceWorker"in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+language();render();showDashboard();loadUrl(DEFAULT);
 })();
 </script>
-<script>
-(()=>{
- let installPrompt=null;const btn=document.getElementById('installAppBtn');if(!btn)return;
- window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;btn.textContent='⬇ تثبيت FREE IPTV WORLD على الهاتف';});
- window.addEventListener('appinstalled',()=>{installPrompt=null;btn.textContent='✓ تم تثبيت FREE IPTV WORLD';btn.disabled=true;});
- btn.addEventListener('click',async()=>{
-  if(installPrompt){installPrompt.prompt();const choice=await installPrompt.userChoice;installPrompt=null;btn.textContent=choice.outcome==='accepted'?'تم طلب تثبيت التطبيق':'تحميل / تثبيت التطبيق';return;}
-  if(window.matchMedia('(display-mode: standalone)').matches){alert('التطبيق مثبت بالفعل على هذا الجهاز.');return;}
-  alert('لتثبيت FREE IPTV WORLD: افتح قائمة Chrome ⋮ ثم اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية». إذا لم يظهر الخيار، حدّث الصفحة وافتح الرابط مباشرة في Chrome.');
- });
-})();
-</script>
+
 </body></html>
