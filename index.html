@@ -132,13 +132,7 @@ main{max-width:1320px;padding:12px 18px}
 (()=>{"use strict";
 const LEGACY_DEFAULT="https://iptv-org.github.io/iptv/index.country.m3u";
 const DEFAULT="https://iptv-org.github.io/iptv/index.m3u";
-const DEFAULT_PLAYLISTS=[
- "https://iptv-org.github.io/iptv/index.m3u",
- "https://iptv-org.github.io/iptv/countries/ma.m3u",
- "https://iptv-org.github.io/iptv/regions/arab.m3u",
- "https://iptv-org.github.io/iptv/languages/ara.m3u",
- "https://iptv-org.github.io/iptv/index.country.m3u"
-];
+const DEFAULT_PLAYLISTS=[DEFAULT];
 const $=id=>document.getElementById(id);
 const store={get(k,d){try{const v=localStorage.getItem("iptvw_"+k);return v===null?d:JSON.parse(v)}catch(_){return d}},set(k,v){try{localStorage.setItem("iptvw_"+k,JSON.stringify(v))}catch(_){}}},
 S={channels:[],country:null,category:"all",packageKey:null,favorites:new Set(store.get("favorites",[])),recent:store.get("recent",[]),hls:null,playlist:(store.get("playlist",DEFAULT)===LEGACY_DEFAULT?DEFAULT:store.get("playlist",DEFAULT)),lang:store.get("lang","ar")},video=$("video");
@@ -181,6 +175,8 @@ async function loadDefault(){
   if(result.status!=="fulfilled"){failed.push(urls[i]);continue}
   ok++;
   for(const ch of result.value.channels){
+   const meta=[ch.name,ch.group,ch.id].join(" ");
+   if(/\\b(adult|xxx|porn|erotic|18\\s*\\+)\\b|للكبار|إباحي|اباحي/i.test(meta))continue;
    if(ch.url&&!merged.has(ch.url))merged.set(ch.url,ch);
   }
  }
@@ -188,7 +184,7 @@ async function loadDefault(){
   S.channels=[...merged.values()];
   S.playlist=DEFAULT;store.set("playlist",DEFAULT);
   S.country="__ALL__";S.packageKey=null;
-  $("package-section")?.classList.add("hidden");
+  document.querySelector(".package-section")?.classList.add("hidden");
   $("listTitle").textContent="كل القنوات";
   $("notice").textContent="تم تحميل "+S.channels.length.toLocaleString()+" قناة من "+ok+" قوائم. قد تتوقف بعض الروابط حسب المصدر أو البلد.";
   render();
@@ -225,7 +221,7 @@ $("openFav").addEventListener("click",()=>{S.category="favorites";S.country=null
 $("addListShortcut").addEventListener("click",addList);
 $("mediaBack").addEventListener("click",showDashboard);
 $("homeBtn").addEventListener("click",showDashboard);
-language();render();showDashboard();loadUrl(S.playlist||DEFAULT);setInterval(()=>{if(document.visibilityState==="visible"&&S.playlist===DEFAULT)loadDefault()},6*60*60*1000);
+language();render();showDashboard();loadUrl(DEFAULT);setInterval(()=>{if(document.visibilityState==="visible"&&S.playlist===DEFAULT)loadDefault()},6*60*60*1000);
 if("serviceWorker"in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 })();
 </script>
