@@ -169,7 +169,7 @@ async function play(ch){
  renderRecent();
  $("nowTitle").textContent=ch.name;
  status("محاولة تشغيل: "+ch.name);
- const isHls=/\\.m3u8(?:$|\\?)/i.test(ch.url);
+ const isHls=/\.m3u8(?:$|\?)/i.test(ch.url);
  if(isHls&&!video.canPlayType("application/vnd.apple.mpegurl")){
   const loaded=await loadHlsLibrary();
   if(loaded&&window.Hls&&Hls.isSupported()){
@@ -229,7 +229,7 @@ async function loadDefault(){
    const unique=new Map();
    for(const ch of loaded.channels){
     const meta=[ch.name,ch.group,ch.id].join(" ");
-    if(/\\b(adult|xxx|porn|erotic|18\\s*\\+)\\b|للكبار|إباحي|اباحي/i.test(meta))continue;
+    if(/\b(adult|xxx|porn|erotic|18\s*\+)\b|للكبار|إباحي|اباحي/i.test(meta))continue;
     if(ch.url&&!unique.has(ch.url))unique.set(ch.url,ch);
    }
    S.channels=[...unique.values()];
