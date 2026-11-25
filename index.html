@@ -189,7 +189,7 @@ async function loadDefault(){
    ok++;
    for(const ch of result.value.channels){
     const meta=[ch.name,ch.group,ch.id].join(" ");
-    if(/\\b(adult|xxx|porn|erotic|18\\s*\\+)\\b|للكبار|إباحي|اباحي/i.test(meta))continue;
+    if(/\b(adult|xxx|porn|erotic|18\s*\+)\b|للكبار|إباحي|اباحي/i.test(meta))continue;
     if(ch.url&&!merged.has(ch.url))merged.set(ch.url,ch);
    }
   }
