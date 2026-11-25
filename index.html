@@ -134,7 +134,7 @@ main{max-width:1320px;padding:12px 18px}
 (()=>{"use strict";
 const LEGACY_DEFAULT="https://iptv-org.github.io/iptv/index.country.m3u";
 const DEFAULT="https://iptv-org.github.io/iptv/index.m3u";
-const DEFAULT_PLAYLISTS=[DEFAULT];
+const DEFAULT_PLAYLISTS=[DEFAULT,"https://raw.githubusercontent.com/iptv-org/iptv/gh-pages/index.m3u"];
 const $=id=>document.getElementById(id);
 const store={get(k,d){try{const v=localStorage.getItem("iptvw_"+k);return v===null?d:JSON.parse(v)}catch(_){return d}},set(k,v){try{localStorage.setItem("iptvw_"+k,JSON.stringify(v))}catch(_){}}},
 S={channels:[],country:null,category:"all",packageKey:null,favorites:new Set(store.get("favorites",[])),recent:store.get("recent",[]),hls:null,playlist:(store.get("playlist",DEFAULT)===LEGACY_DEFAULT?DEFAULT:store.get("playlist",DEFAULT)),lang:store.get("lang","ar")},video=$("video");
